@@ -44,7 +44,7 @@ EspBootstrap consists of three major components:
 #### Typical device boot process
 
 1. Attempt to load parameters from EEPROM (fails first time since nothing was ever saved)
-2. Collect initial configuration parameters by **EspBootstrap** (typically a WiFi SSID, password and a link to web-based configuration service)
+2. Collect initial configuration parameters via web form (http://10.1.1.1) created by **EspBootstrap** (typically a WiFi SSID, password and a link to web-based configuration service)
 3. Reboot and connect to WiFi with the recently obtained credentials
 4. Load JSON configuration file from the web service using **JsonWebConfig** and populate respective configuration parameters
 5. Save new configuration to EEPROM

@@ -39,7 +39,7 @@
 
 // Every configration structure should start with a token
 // "Token" is a character string identifying set of parameters (and a version)
-// IMPORTANT: Token should be the fist element of the parameters structure. 
+// IMPORTANT: Token should be the fist element of the parameters structure.
 #define CTOKEN  "EBS1"
 const String TOKEN(CTOKEN);
 
@@ -65,7 +65,7 @@ typedef struct {
 // Define actual parameter variable
 Params eg;
 
-// You can supply default values for the parameters 
+// You can supply default values for the parameters
 // Which will be loaded into the structure in case
 // of bad crc or token mismatch
 // You can provide NULL pointer instead of Defaults
@@ -73,7 +73,7 @@ Params eg;
 Params defaults = { CTOKEN,
                     "<wifi ssid>",
                     "<wifi password>",
-//                  "http://raw.githubusercontent.com/arkhipenko/EspBootstrap/master/examples/EBS_example01/config.json",
+                    //                  "http://raw.githubusercontent.com/arkhipenko/EspBootstrap/master/examples/EBS_example01/config.json",
                     "http://ota.home.lan/esp/config/ebs01config.json",
                     "<ota.server.com>",
                     "1234",
@@ -81,7 +81,7 @@ Params defaults = { CTOKEN,
                   };
 
 // A very important part of the process is a map of parameter fields
-// This map is used by many library components to populate individual fields. 
+// This map is used by many library components to populate individual fields.
 // The map SHOULD NOT include reference to the TOKEN
 char* PARS[] = { eg.ssid,
                  eg.pwd,
@@ -95,7 +95,7 @@ char* PARS[] = { eg.ssid,
 // when the form is constructed. You could include all fields, or just a subset
 // First line is used as a title, the rest are the field labels
 // This structure works in conjunction with PARS[] structure to identify
-// which fields to actually populate. 
+// which fields to actually populate.
 const int NPARS_BTS = 3;
 const char* PAGE[] = { "EspBootstrap",
                        "WiFi SSID",
@@ -128,115 +128,120 @@ void printConfig() {
 // Arduino SETUP method
 void setup(void) {
 
-// Setting up Serial console
+  // Setting up Serial console
 #ifdef _DEBUG_
   Serial.begin(115200);
   delay(3000);
   {
     _PL("EspBootStrap Example"); _PL();
+#if defined( ARDUINO_ARCH_ESP8266 )
     String id = "ESP8266-" + String(ESP.getChipId(), HEX);
+#endif
+#if defined( ARDUINO_ARCH_ESP32 )
+    String id= "ESP32-" + String((uint32_t)( ESP.getEfuseMac() & 0xFFFFFFFFL ), HEX);
+#endif
     _PP("ESP Chip ID: "); _PL(id);
     _PP("Parameter structure size: "); _PL( sizeof(Params) );
     _PL();
   }
 #endif
 
-// **** PARAMETERS COMPONENT OF ESPBOOTSTRAP LIBRARY ****
-// ======================================================
-// To work with Parameters we need to instanciate a Paramters object.
-//  first parameter  is the starting address in the EEPROM memory, {int}
-//  second parameter is a reference to the token, {String}
-//  third parameter  is a pointer to the parameters variable {Params}
-//  fourth parameter is a pointer to the defaults {cahr **}, or NULL if no defaults
-//  fifth parameter is a size of paramters structure + 1 byte for CRC
+  // **** PARAMETERS COMPONENT OF ESPBOOTSTRAP LIBRARY ****
+  // ======================================================
+  // To work with Parameters we need to instanciate a Paramters object.
+  //  first parameter  is the starting address in the EEPROM memory, {int}
+  //  second parameter is a reference to the token, {String}
+  //  third parameter  is a pointer to the parameters variable {Params}
+  //  fourth parameter is a pointer to the defaults {cahr **}, or NULL if no defaults
+  //  fifth parameter is a size of paramters structure + 1 byte for CRC
   Parameters<Params> *p = new Parameters<Params>(0, TOKEN, &eg, &defaults, sizeof(Params) + 1);
 
-// Since constructors do not return values, all error reporting is done with lastError() method
-// Calling lastError() right after initialization will indicate that EEPROM has enough memory 
-// to hold your parameters. 
-// Define EEPROM_MAX to explicitly set maximum EEPROM capacity for your chip
+  // Since constructors do not return values, all error reporting is done with lastError() method
+  // Calling lastError() right after initialization will indicate that EEPROM has enough memory
+  // to hold your parameters.
+  // Define EEPROM_MAX to explicitly set maximum EEPROM capacity for your chip
   int rc = p->lastError();
   _PP(millis()); _PL(": EspBootStrap initialized:");
   _PP("rc = "); _PL(rc);
 
-// load() methods attempts to load parameters from the EEPROM
-// It checks for a valid CRC and a match on the TOKENs. 
-// If either CRC or token do not match, an error is set
-// load() can return OK, indicating that in the end the structure was populated with something,
-// however lastError() may indicate that values were overwritten with defaults due to CRC
-// or Token mismatch, and therefore return a non-zero value. Always check lastError()!
+  // load() methods attempts to load parameters from the EEPROM
+  // It checks for a valid CRC and a match on the TOKENs.
+  // If either CRC or token do not match, an error is set
+  // load() can return OK, indicating that in the end the structure was populated with something,
+  // however lastError() may indicate that values were overwritten with defaults due to CRC
+  // or Token mismatch, and therefore return a non-zero value. Always check lastError()!
   p->load();
   rc = p->lastError();
   _PP(millis()); _PL(": Configuration loaded:");
   _PP("rc = "); _PL(rc);
   printConfig();
 
-// If Parameters were loaded successfully, the device will try to 
-// connect to the WiFi network specified in the configuration for 30 seconds
-// It will time out after 30 seconds on an assumption that WiFi config is invalid
-// 30 seconds is arbitrary - you can set it for longer of shorter period of time
+  // If Parameters were loaded successfully, the device will try to
+  // connect to the WiFi network specified in the configuration for 30 seconds
+  // It will time out after 30 seconds on an assumption that WiFi config is invalid
+  // 30 seconds is arbitrary - you can set it for longer of shorter period of time
   if (rc == PARAMS_OK) {
     _PP(millis()); _PL(": Connecting to WiFi for 30 sec:");
     setupWifi();
     waitForWifi(30 * BOOTSTRAP_SECOND);
   }
 
-// If loading of parameters failed, or a WiFi connection timed out
-// we need to BootStrap the device. 
-// ESPBootstrap is a static singleton object which will start up an Access Point (ESPXXX-NNNNNN),
-// and a webserver, and then display a simple web form as specified by the PAGE and PARS structures.
-// The webserver will be active for 5 minutes. This is done to prevent devices from going into
-// bootstrap mode forever due to intermittent WiFi issues. After 5 minutes, if the Submit button
-// was never pressed, the device will reboot and re-try to connect to current WiFi network. 
-// This will continue until either the WiFi settings are changes on the web page, or WiFi network
-// issues with the current correct settings are resolved 
+  // If loading of parameters failed, or a WiFi connection timed out
+  // we need to BootStrap the device.
+  // ESPBootstrap is a static singleton object which will start up an Access Point (ESPXXX-NNNNNN),
+  // and a webserver, and then display a simple web form as specified by the PAGE and PARS structures.
+  // The webserver will be active for 5 minutes. This is done to prevent devices from going into
+  // bootstrap mode forever due to intermittent WiFi issues. After 5 minutes, if the Submit button
+  // was never pressed, the device will reboot and re-try to connect to current WiFi network.
+  // This will continue until either the WiFi settings are changes on the web page, or WiFi network
+  // issues with the current correct settings are resolved
   if (rc != PARAMS_OK || wifiTimeout) {
     _PP(millis()); _PL(":Bootstrapping:");
 
-// **** BOOTSTRAP COMPONENT OF ESPBOOTSTRAP LIBRARY ****
-// =====================================================
-// ESPBootstrap.run() takes 4 paramters:
-//  Number of parameters to display on the web form, {int}
-//  Pointer to the descriptions (title, and fields), {char **}
-//  Pointer to the parameter map, {char **}
-//  Timeout in milliseconds. (can use helper constants BOOTSTRAP_MINUTE and BOOTSTRAP_SECOND)
+    // **** BOOTSTRAP COMPONENT OF ESPBOOTSTRAP LIBRARY ****
+    // =====================================================
+    // ESPBootstrap.run() takes 4 paramters:
+    //  Number of parameters to display on the web form, {int}
+    //  Pointer to the descriptions (title, and fields), {char **}
+    //  Pointer to the parameter map, {char **}
+    //  Timeout in milliseconds. (can use helper constants BOOTSTRAP_MINUTE and BOOTSTRAP_SECOND)
     rc = ESPBootstrap.run(NPARS_BTS, PAGE, PARS, 5 * BOOTSTRAP_MINUTE);
 
     if (rc == BOOTSTRAP_OK) {
-// If bootstrap was successful, new set of parameters should be saved,
-// and processing continued
+      // If bootstrap was successful, new set of parameters should be saved,
+      // and processing continued
       p->save();
       _PP(millis()); _PL(": Bootstrapped OK. Rebooting.");
     }
     else {
       _PP(millis()); _PL(": Bootstrap timed out. Rebooting.");
     }
-// or device should be restarted after a timeout
+    // or device should be restarted after a timeout
     printConfig();
     delay(1000);
     ESP.restart();
   }
 
-// **** JSONCONFIG COMPONENT OF ESPBOOTSTRAP LIBRARY ****
-// ======================================================
-// The rest of the parameters could be lifted off a JSON configuration file
-// Example of the JSON file is provided on the github.
-// JSON file rules:
-//  1. No arrays - just a list of key-value pairs
-//  2. All keys and values are strings and should be in quotation marks
-//  3. The order of key-value pairs in the file should be EXACTLY the same as paramters structure, without leading TOKEN
-//  4. Keys and values can contain backslash-ed characters: e.g.; "key\"with a quote" : "\\path\\path2",
-//  5. Each line should end with a comma "," (except the last line)
-//
-// JSONConfig is a static singleton object that does HTTP call, parses the JSON file, and
-// populates respective confuration fields. 
-// JSONConfig.parseHttp takes 3 parameters:
-//  a fully quallified URL pointing to a JSON configuation file (including http://) {char *}
-//  a pointer to the parameter map, {char **}
-//  number of paramters to populate minus 1 for token, {int}
+  // **** JSONCONFIG COMPONENT OF ESPBOOTSTRAP LIBRARY ****
+  // ======================================================
+  // The rest of the parameters could be lifted off a JSON configuration file
+  // Example of the JSON file is provided on the github.
+  // JSON file rules:
+  //  1. No arrays - just a list of key-value pairs
+  //  2. All keys and values are strings and should be in quotation marks
+  //  3. The order of key-value pairs in the file should be EXACTLY the same as paramters structure, without leading TOKEN
+  //  4. Keys and values can contain backslash-ed characters: e.g.; "key\"with a quote" : "\\path\\path2",
+  //  5. Each line should end with a comma "," (except the last line)
+  //
+  // JSONConfig is a static singleton object that does HTTP call, parses the JSON file, and
+  // populates respective confuration fields.
+  // JSONConfig.parseHttp takes 3 parameters:
+  //  a fully quallified URL pointing to a JSON configuation file (including http://) {char *}
+  //  a pointer to the parameter map, {char **}
+  //  number of paramters to populate minus 1 for token, {int}
   rc = JSONConfig.parseHttp(eg.cfg_url, PARS, NPARS - 1);
 
-// If successful, the "eg" structure should have a fresh set of paraeters from the JSON file. 
+  // If successful, the "eg" structure should have a fresh set of paraeters from the JSON file.
   _PP(millis()); _PP(": JSONConfig finished. rc = "); _PL(rc);
   printConfig();
   if (rc == 0) p->save();
@@ -259,7 +264,7 @@ void setupWifi() {
   WiFi.begin(eg.ssid, eg.pwd);
 }
 
-// This method waits for a WiFi connection for aTimeout milliseconds. 
+// This method waits for a WiFi connection for aTimeout milliseconds.
 void waitForWifi(unsigned long aTimeout) {
   _PP(millis()); _PL(": waitForWifi()");
 

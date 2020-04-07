@@ -10,9 +10,10 @@
 #define EEPROM_MAX  512
 #endif
 
-#if defined( ARDUINO_ARCH_ESP8266 )
+#if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
 #define EEPROM_MAX  4096
 #endif
+
 #endif // #ifndef EEPROM_MAX
 
 
@@ -63,7 +64,7 @@ Parameters<T>::Parameters(uint16_t address, const String& token, T* ptr, T* defl
   if ( iMaxLen < 4 ) iMaxLen = 4;
   if ( iMaxLen >= EEPROM_MAX-1 ) iMaxLen = EEPROM_MAX-1;
   if ( iLen+1 <= iMaxLen ) {
-#if defined( ARDUINO_ARCH_ESP8266 )
+#if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
     EEPROM.begin(iLen+1);
 #endif
     iActive = true;
@@ -77,7 +78,7 @@ template<typename T>
 Parameters<T>::~Parameters() {
     if (iActive) {
       save();
-#if defined( ARDUINO_ARCH_ESP8266 )
+#if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
       EEPROM.end();
 #endif
       iActive = false;
@@ -139,9 +140,10 @@ int8_t Parameters<T>::save() {
 #else
   EEPROM.write( iAddress + iLen, checksum () );
 #endif
-#if defined( ARDUINO_ARCH_ESP8266 )
+#if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
   EEPROM.commit();
 #endif
+
   iRc = PARAMS_OK;
   return PARAMS_OK;
 }

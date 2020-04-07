@@ -8,6 +8,11 @@
 #include <ESP8266HTTPClient.h>
 #endif
 
+#if defined( ARDUINO_ARCH_ESP32 )
+#include <WiFiClient.h>
+#include <HTTPClient.h>
+#endif
+
 #define JSON_OK         0
 #define JSON_ERR      (-1)
 #define JSON_COMMA    (-2)

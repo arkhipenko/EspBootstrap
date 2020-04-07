@@ -8,7 +8,15 @@
 #if defined( ARDUINO_ARCH_ESP8266 )
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#define WebServer ESP8266WebServer
 #endif
+
+#if defined( ARDUINO_ARCH_ESP32 )
+#include <WiFi.h>
+#include <WebServer.h>
+#define WebServer WebServer
+#endif
+
 
 #define BOOTSTRAP_OK        0
 #define BOOTSTRAP_ERR      (-1)
@@ -30,7 +38,7 @@ class EspBootstrap {
   private:
     
     int8_t            iAllDone; 
-    ESP8266WebServer* iServer;
+    WebServer*        iServer;
     uint8_t           iNum;
     const char**      iTitles;
     char**            iMap;
@@ -66,7 +74,7 @@ void __espbootstrap_handlesubmit() {
 
 
   
-#define   SSID_PREFIX   "ARDUINO-"
+#define   SSID_PREFIX   "BOOTSTRAP-AP"
 
 #if defined( ARDUINO_ARCH_ESP8266 )
 #define   SSID_PREFIX   "ESP8266-"
@@ -89,12 +97,18 @@ int8_t EspBootstrap::run(uint8_t aNum, const char** aTitles, char** aMap, uint32
 
   WiFi.disconnect();
   WiFi.mode(WIFI_AP);
-  WiFi.softAPConfig(APIP, APIP, APMASK);
+
+#if defined( ARDUINO_ARCH_ESP8266 )
   ssid += String(ESP.getChipId(), HEX);
+#endif
+#if defined( ARDUINO_ARCH_ESP32 )
+  ssid += String((uint32_t)( ESP.getEfuseMac() & 0xFFFFFFFFL ), HEX);
+#endif
   WiFi.softAP( ssid.c_str());
+  WiFi.softAPConfig(APIP, APIP, APMASK);
   yield();
 
-  iServer = new ESP8266WebServer(80);
+  iServer = new WebServer(80);
   if (iServer == NULL) return BOOTSTRAP_ERR;
 
   iServer->on("/submit.html", __espbootstrap_handlesubmit);

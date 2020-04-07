@@ -1,0 +1,57 @@
+#######################################
+# Syntax Coloring Map For TaskManager
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+EspBootstrap	KEYWORD1
+
+Parameters	KEYWORD1
+
+JsonConfig	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+run	KEYWORD2
+
+read	KEYWORD2
+save	KEYWORD2
+lastError	KEYWORD2
+loadDefaults	KEYWORD2
+
+parseHttp	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+
+BOOTSTRAP_OK	LITERAL1
+BOOTSTRAP_ERR	LITERAL1
+BOOTSTRAP_TIMEOUT	LITERAL1
+BOOTSTRAP_SECOND	LITERAL1
+BOOTSTRAP_MINUTE	LITERAL1
+ESPBootstrap	LITERAL1
+
+PARAMS_OK	LITERAL1
+PARAMS_ERR	LITERAL1
+PARAMS_LEN	LITERAL1
+PARAMS_CRC	LITERAL1
+PARAMS_TOK	LITERAL1
+PARAMS_ACT	LITERAL1
+
+JSON_OK	LITERAL1
+JSON_ERR	LITERAL1
+JSON_COMMA	LITERAL1
+JSON_COLON	LITERAL1
+JSON_QUOTE	LITERAL1
+JSON_BCKSL	LITERAL1
+JSON_HTTPERR	LITERAL1
+JSON_NOWIFI	LITERAL1
+JSON_EOF	LITERAL1
+JSONConfig	LITERAL1
+
+#######################################
+

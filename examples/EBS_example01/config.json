@@ -1,0 +1,8 @@
+{
+  "ssid"       : "devices",
+  "pwd"        : "wifipassword",
+  "cfg_url"    : "http://raw.githubusercontent.com/arkhipenko/EspBootstrap/master/examples/EBS_example01/config.json",
+  "ota_host"   : "ota.home.lan",
+  "ota_port"   : "80",
+  "ota_url"    : "/esp/esp8266.php"
+}

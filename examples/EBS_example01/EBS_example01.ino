@@ -40,7 +40,7 @@
 // Every configration structure should start with a token
 // "Token" is a character string identifying set of parameters (and a version)
 // IMPORTANT: Token should be the fist element of the parameters structure.
-#define CTOKEN  "EBS1"
+#define CTOKEN  "EBS2"
 const String TOKEN(CTOKEN);
 
 // NPARS is a number of parameters in the structure
@@ -113,14 +113,14 @@ bool wifiTimeout;
 // This methods prints out all parameters for inspection
 void printConfig() {
   _PL();
-  _PP(millis()); _PL(": Config dump");
-  _PP("token : "); _PL(eg.token);
-  _PP("ssid  : "); _PL(eg.ssid);
-  _PP("passwd: "); _PL(eg.pwd);
-  _PP("config: "); _PL(eg.cfg_url);
-  _PP("ota host: "); _PL(eg.ota_host);
-  _PP("ota port  : "); _PL(eg.ota_port);
-  _PP("ota url   : "); _PL(eg.ota_url);
+  _PL("Config dump");
+  _PP("\ttoken    : "); _PL(eg.token);
+  _PP("\tssid     : "); _PL(eg.ssid);
+  _PP("\tpasswd   : "); _PL(eg.pwd);
+  _PP("\tconfig   : "); _PL(eg.cfg_url);
+  _PP("\tota host : "); _PL(eg.ota_host);
+  _PP("\tota port : "); _PL(eg.ota_port);
+  _PP("\tota url  : "); _PL(eg.ota_url);
   _PL();
 }
 
@@ -161,8 +161,7 @@ void setup(void) {
   // to hold your parameters.
   // Define EEPROM_MAX to explicitly set maximum EEPROM capacity for your chip
   int rc = p->lastError();
-  _PP(millis()); _PL(": EspBootStrap initialized:");
-  _PP("rc = "); _PL(rc);
+  _PP(": EspBootStrap initialized. rc = ");_PL(rc);
 
   // load() methods attempts to load parameters from the EEPROM
   // It checks for a valid CRC and a match on the TOKENs.
@@ -172,8 +171,7 @@ void setup(void) {
   // or Token mismatch, and therefore return a non-zero value. Always check lastError()!
   p->load();
   rc = p->lastError();
-  _PP(millis()); _PL(": Configuration loaded:");
-  _PP("rc = "); _PL(rc);
+  _PP("Configuration loaded. rc = "); _PL(rc);
   printConfig();
 
   // If Parameters were loaded successfully, the device will try to
@@ -181,7 +179,7 @@ void setup(void) {
   // It will time out after 30 seconds on an assumption that WiFi config is invalid
   // 30 seconds is arbitrary - you can set it for longer of shorter period of time
   if (rc == PARAMS_OK) {
-    _PP(millis()); _PL(": Connecting to WiFi for 30 sec:");
+    _PP("Connecting to WiFi for 30 sec:");
     setupWifi();
     waitForWifi(30 * BOOTSTRAP_SECOND);
   }
@@ -196,7 +194,7 @@ void setup(void) {
   // This will continue until either the WiFi settings are changes on the web page, or WiFi network
   // issues with the current correct settings are resolved
   if (rc != PARAMS_OK || wifiTimeout) {
-    _PP(millis()); _PL(":Bootstrapping:");
+    _PL("Bootstrapping...");
 
     // **** BOOTSTRAP COMPONENT OF ESPBOOTSTRAP LIBRARY ****
     // =====================================================
@@ -211,10 +209,10 @@ void setup(void) {
       // If bootstrap was successful, new set of parameters should be saved,
       // and processing continued
       p->save();
-      _PP(millis()); _PL(": Bootstrapped OK. Rebooting.");
+      _PL("Bootstrapped OK. Rebooting.");
     }
     else {
-      _PP(millis()); _PL(": Bootstrap timed out. Rebooting.");
+      _PL("Bootstrap timed out. Rebooting.");
     }
     // or device should be restarted after a timeout
     printConfig();
@@ -242,7 +240,7 @@ void setup(void) {
   rc = JSONConfig.parseHttp(eg.cfg_url, PARS, NPARS - 1);
 
   // If successful, the "eg" structure should have a fresh set of paraeters from the JSON file.
-  _PP(millis()); _PP(": JSONConfig finished. rc = "); _PL(rc);
+  _PP("JSONConfig finished. rc = "); _PL(rc);
   printConfig();
   if (rc == 0) p->save();
 }
@@ -253,7 +251,7 @@ void loop(void) {
 
 // This method prepares for WiFi connection
 void setupWifi() {
-  _PP(millis()); _PL(": setup_wifi()");
+  _PL("Setup_wifi()");
 
   // We start by connecting to a WiFi network
   _PL("Connecting to WiFi...");
@@ -266,7 +264,7 @@ void setupWifi() {
 
 // This method waits for a WiFi connection for aTimeout milliseconds.
 void waitForWifi(unsigned long aTimeout) {
-  _PP(millis()); _PL(": waitForWifi()");
+  _PL("WaitForWifi()");
 
   unsigned long timeNow = millis();
   wifiTimeout = false;

@@ -17,7 +17,7 @@ That's when **EspBootstrap** comes to rescue: you can quickly provision initial 
 
 
 
-#### **Concept**
+### **Concept**
 
 **EspBootstrap** consists of three major components:
 

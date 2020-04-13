@@ -19,7 +19,7 @@ JsonConfig	KEYWORD1
 run	KEYWORD2
 
 clear	KEYWORD2
-lastError	KEYWORD2
+begin	KEYWORD2
 loadDefaults	KEYWORD2
 read	KEYWORD2
 save	KEYWORD2

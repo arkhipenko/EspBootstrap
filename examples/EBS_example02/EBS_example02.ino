@@ -124,11 +124,9 @@ void setup(void) {
   //    enough space. Otherwise the Parameters object will not be activated.
   Parameters *p = new Parameters(0, TOKEN, d, 1024);
 
-  // Since constructors do not return values, all error reporting is done with lastError() method
-  // Calling lastError() right after initialization will indicate that EEPROM has enough memory
-  // to hold your parameters.
   // Define EEPROM_MAX to explicitly set maximum EEPROM capacity for your chip
-  int rc = p->lastError();
+  // begin() method actaully checks if there is enough space in the EEPROM and return PARAMS_ERR if not
+  int rc = p->begin();
   _PP("EspBootStrap initialized. rc = "); _PL(rc);
 
   // load() methods attempts to load parameters from the EEPROM
@@ -138,8 +136,7 @@ void setup(void) {
   // however lastError() may indicate that values were overwritten with defaults due to CRC
   // or Token mismatch, and therefore return a non-zero value. Always check lastError()!
   // Upon success, the dictionary should be updated with key-value pairs from the EEPROM
-  p->load();
-  rc = p->lastError();
+  rc = p->load();
   _PP("Configuration loaded. rc = ");_PL(rc);
   printConfig();
 
@@ -170,10 +167,11 @@ void setup(void) {
     // **** BOOTSTRAP COMPONENT OF ESPBOOTSTRAP LIBRARY ****
     // =====================================================
     // ESPBootstrap.run() takes 4 paramters:
-    //  Number of parameters to display on the web form, {int}
     //  Reference to the dictionary object with title and fields, {Dictionary}
+    //  Number of parameters to display on the web form, {int}
     //  Timeout in milliseconds. (can use helper constants BOOTSTRAP_MINUTE and BOOTSTRAP_SECOND)
-    rc = ESPBootstrap.run(NPARS_BTS, d, 5 * BOOTSTRAP_MINUTE);
+    rc = ESPBootstrap.run(d, NPARS_BTS, 5 * BOOTSTRAP_MINUTE);
+//    rc = ESPBootstrap.run(d));
 
     if (rc == BOOTSTRAP_OK) {
       // If bootstrap was successful, new set of parameters should be saved,

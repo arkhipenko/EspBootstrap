@@ -33,7 +33,7 @@ void setup(void) {
   d("cfg_url", "http://ota.home.lan/esp/config/ebs02config.json");
 
   Parameters *p = new Parameters(0, TOKEN, d, 1024);
-  if (p->lastError() != PARAMS_OK) for(;;) ; // something is wrong with EEPROM!!
+  if (p->begin() != PARAMS_OK) for(;;) ; // something is wrong with EEPROM!!
   
   if ( (rc = p->load()) == PARAMS_OK) {
     setupWifi();
@@ -41,7 +41,7 @@ void setup(void) {
   }
 
   if (rc != PARAMS_OK || wifiTimeout) {
-    if (ESPBootstrap.run(NPARS_BTS, d, 5 * BOOTSTRAP_MINUTE) == BOOTSTRAP_OK) p->save();
+    if (ESPBootstrap.run(d) == BOOTSTRAP_OK) p->save();
     delay(1000);
     ESP.restart();
   }

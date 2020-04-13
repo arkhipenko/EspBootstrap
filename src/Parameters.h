@@ -66,9 +66,10 @@ class Parameters {
     Parameters(uint16_t aAddress, const String& aToken, Dictionary& aDict, uint16_t aSize );
     ~Parameters();
 
-    inline int8_t   lastError() {
-      return iRc;
-    }
+//    inline int8_t   lastError() {
+//      return iRc;
+//    }
+    int8_t          begin();
     int8_t          load();
     int8_t          save();
     void            clear();
@@ -76,7 +77,6 @@ class Parameters {
   private:
     uint8_t         checksum ();
 
-    int8_t          iRc;
     int8_t          iActive;
     Dictionary&     iDict;
     const String&   iToken;
@@ -86,21 +86,20 @@ class Parameters {
 };
 
 Parameters::Parameters(uint16_t aAddress, const String& aToken, Dictionary& aDict, uint16_t aSize ) : iToken(aToken), iDict(aDict)  {
-  iRc = PARAMS_OK;
   iActive = false;
   iAddress = aAddress;
   iSize = aSize;
   iData = NULL;
-  uint16_t maxLen = aToken.length() + aDict.size() + 4; // 4: 1 null for token, 1 crc8, 2 bytes for count
-  if ( aSize < EEPROM_MAX && maxLen <= aSize) {
-#if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
-    EEPROM.begin(iSize);
-#endif
-    iActive = true;
-  }
-  else {
-    iRc = PARAMS_LEN;
-  }
+//  uint16_t maxLen = aToken.length() + aDict.size() + 4; // 4: 1 null for token, 1 crc8, 2 bytes for count
+//  if ( aSize < EEPROM_MAX && maxLen <= aSize) {
+//#if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
+//    EEPROM.begin(iSize);
+//#endif
+//    iActive = true;
+//  }
+//  else {
+//    iRc = PARAMS_LEN;
+//  }
 }
 
 Parameters::~Parameters() {
@@ -113,17 +112,34 @@ Parameters::~Parameters() {
   }
 }
 
+
+int8_t Parameters::begin() {
+  uint16_t maxLen = iToken.length() + iDict.size() + 4; // 4: 1 null for token, 1 crc8, 2 bytes for count
+  if ( iSize < EEPROM_MAX && maxLen <= iSize) {
+#if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
+    EEPROM.begin(iSize);
+#endif
+    iActive = true;
+    return PARAMS_OK;
+  }
+  else {
+    return PARAMS_LEN;
+  }
+  
+}
+
+
 int8_t Parameters::load() {
   uint16_t iTl = iToken.length();
 
   if (!iActive) {
-    iRc = PARAMS_ACT;
+//    iRc = PARAMS_ACT;
     return PARAMS_ACT;
   }
 
   iData = (uint8_t * ) malloc(iSize);
   if (iData == NULL) {
-    iRc = PARAMS_MEM;
+//    iRc = PARAMS_MEM;
     return PARAMS_MEM;
   }
   uint8_t* p = iData;
@@ -138,7 +154,7 @@ int8_t Parameters::load() {
 //    loadDefaults();
     free(iData);
     iData = NULL;
-    iRc = PARAMS_CRC;
+//    iRc = PARAMS_CRC;
     return PARAMS_CRC;
   }
 
@@ -147,7 +163,7 @@ int8_t Parameters::load() {
 //    loadDefaults();
     free(iData);
     iData = NULL;
-    iRc = PARAMS_TOK;
+//    iRc = PARAMS_TOK;
     return PARAMS_TOK;
   }
 
@@ -167,14 +183,14 @@ int8_t Parameters::load() {
 
   free(iData);
   iData = NULL;
-  iRc = PARAMS_OK;
+//  iRc = PARAMS_OK;
   return PARAMS_OK;
 }
 
 
 int8_t Parameters::save() {
   if (!iActive) {
-    iRc = PARAMS_ACT;
+//    iRc = PARAMS_ACT;
     return PARAMS_ACT;
   }
   uint16_t iTl = iToken.length();
@@ -183,12 +199,12 @@ int8_t Parameters::save() {
   uint16_t maxLen = iTl + iDs + 4;
 
   if ( maxLen >= iSize ) {
-    iRc = PARAMS_LEN;
+//    iRc = PARAMS_LEN;
     return PARAMS_LEN;
   }
   iData = (uint8_t * ) malloc(iSize);
   if (iData == NULL) {
-    iRc = PARAMS_MEM;
+//    iRc = PARAMS_MEM;
     return PARAMS_MEM;
   }
   clear();
@@ -229,7 +245,7 @@ int8_t Parameters::save() {
   free(iData);
   iData = NULL;
 
-  iRc = PARAMS_OK;
+//  iRc = PARAMS_OK;
   return PARAMS_OK;
 }
 
@@ -242,7 +258,6 @@ void Parameters::clear () {
   if (iData) {
     memset((void *) iData, 0, iSize - 1);
   }
-
 }
 
 
@@ -275,9 +290,10 @@ class Parameters {
     Parameters(uint16_t address, const String& token, T* ptr, T* deflt = NULL, uint16_t maxlength = EEPROM_MAX );
     ~Parameters();
 
-    inline int8_t   lastError() {
-      return iRc;
-    }
+//    inline int8_t   lastError() {
+//      return iRc;
+//    }
+    int8_t          begin();
     int8_t          load();
     int8_t          save();
     void            loadDefaults();
@@ -286,7 +302,7 @@ class Parameters {
   private:
     uint8_t         checksum ();
 
-    int8_t          iRc;
+//    int8_t          iRc;
     int8_t          iActive;
     T*              iData;
     T*              iDefault;
@@ -299,7 +315,6 @@ class Parameters {
 
 template<typename T>
 Parameters<T>::Parameters(uint16_t address, const String& token, T* ptr, T* deflt, uint16_t maxlength ) : iToken(token)  {
-  iRc = PARAMS_OK;
   iActive = false;
   iAddress = address;
   //  iToken = (String&) token;
@@ -307,17 +322,17 @@ Parameters<T>::Parameters(uint16_t address, const String& token, T* ptr, T* defl
   iDefault = deflt;
   iLen = sizeof(T);
   iMaxLen = maxlength;
-  if ( iMaxLen < 4 ) iMaxLen = 4;
-  if ( iMaxLen >= EEPROM_MAX - 1 ) iMaxLen = EEPROM_MAX - 1;
-  if ( iLen + 1 <= iMaxLen ) {
-#if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
-    EEPROM.begin(iLen + 1);
-#endif
-    iActive = true;
-  }
-  else {
-    iRc = PARAMS_LEN;
-  }
+//  if ( iMaxLen < 4 ) iMaxLen = 4;
+//  if ( iMaxLen >= EEPROM_MAX - 1 ) iMaxLen = EEPROM_MAX - 1;
+//  if ( iLen + 1 <= iMaxLen ) {
+//#if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
+//    EEPROM.begin(iLen + 1);
+//#endif
+//    iActive = true;
+//  }
+//  else {
+//    iRc = PARAMS_LEN;
+//  }
 }
 
 template<typename T>
@@ -331,12 +346,31 @@ Parameters<T>::~Parameters() {
   }
 }
 
+
+template<typename T>
+int8_t Parameters<T>::begin() {
+
+  if ( iMaxLen < 4 ) iMaxLen = 4;
+  if ( iMaxLen >= EEPROM_MAX - 1 ) iMaxLen = EEPROM_MAX - 1;
+  if ( iLen + 1 <= iMaxLen ) {
+#if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
+    EEPROM.begin(iLen + 1);
+#endif
+    iActive = true;
+    return PARAMS_OK;
+  }
+  else {
+    return PARAMS_LEN;
+  }
+}
+
+
 template<typename T>
 int8_t Parameters<T>::load() {
   uint8_t *ptr = (uint8_t *) iData;
 
   if (!iActive) {
-    iRc = PARAMS_ACT;
+//    iRc = PARAMS_ACT;
     return PARAMS_ACT;
   }
 
@@ -347,16 +381,16 @@ int8_t Parameters<T>::load() {
 
   if (crc != checksum () ) {
     loadDefaults();
-    iRc = PARAMS_CRC;
-    return PARAMS_OK;
+//    iRc = PARAMS_CRC;
+    return PARAMS_CRC;
   }
 
   if ( strncmp( (const char *) iToken.c_str(), (const char *) iData, iMaxLen ) != 0 ) {
     loadDefaults();
-    iRc = PARAMS_TOK;
-    return PARAMS_OK;
+//    iRc = PARAMS_TOK;
+    return PARAMS_TOK;
   }
-  iRc = PARAMS_OK;
+//  iRc = PARAMS_OK;
   return PARAMS_OK;
 }
 
@@ -366,12 +400,12 @@ int8_t Parameters<T>::save() {
   uint8_t *ptr = (uint8_t *) iData;
 
   if (!iActive) {
-    iRc = PARAMS_ACT;
+//    iRc = PARAMS_ACT;
     return PARAMS_ACT;
   }
 
   if ( sizeof(T) >= iMaxLen ) {
-    iRc = PARAMS_LEN;
+//    iRc = PARAMS_LEN;
     return PARAMS_LEN;
   }
   for (uint16_t i = 0; i < iLen; i++, ptr++) {
@@ -390,7 +424,7 @@ int8_t Parameters<T>::save() {
   EEPROM.commit();
 #endif
 
-  iRc = PARAMS_OK;
+//  iRc = PARAMS_OK;
   return PARAMS_OK;
 }
 

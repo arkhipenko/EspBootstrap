@@ -61,9 +61,9 @@ class EspBootstrap {
     ~EspBootstrap();
 
 #ifdef _USE_DICTIONARY_
-    int8_t     run(uint8_t aNum, Dictionary &aDict, uint32_t aTimeout = 10 * BOOTSTRAP_MINUTE);
+    int8_t     run(Dictionary &aDict, uint8_t aNum = 0, uint32_t aTimeout = 10 * BOOTSTRAP_MINUTE);
 #else
-    int8_t     run(uint8_t aNum, const char** aTitles, char** aMap, uint32_t aTimeout = 10 * BOOTSTRAP_MINUTE);
+    int8_t     run(const char** aTitles, char** aMap, uint8_t aNum, uint32_t aTimeout = 10 * BOOTSTRAP_MINUTE);
 #endif
     void       handleRoot ();
     void       handleSubmit ();
@@ -124,15 +124,23 @@ void __espbootstrap_handlesubmit() {
 #endif
 
 #ifdef _USE_DICTIONARY_
-int8_t EspBootstrap::run(uint8_t aNum, Dictionary &aDict, uint32_t aTimeout) {
-  iNum = aNum;
+int8_t EspBootstrap::run(Dictionary &aDict, uint8_t aNum, uint32_t aTimeout) {
+  if (aNum == 0) {
+    iNum = aDict.count() - 1;
+  }
+  else {
+    iNum = aNum;
+  }
+  if (iNum > aDict.count() - 1) iNum = aDict.count() - 1;
+  if (iNum == 0) iNum = 1;
+
   iDict = &aDict;
   iTimeout = aTimeout;
 
   doRun();
 }
 #else
-int8_t EspBootstrap::run(uint8_t aNum, const char** aTitles, char** aMap, uint32_t aTimeout) {
+int8_t EspBootstrap::run(const char** aTitles, char** aMap, uint8_t aNum, uint32_t aTimeout) {
 
   iNum = aNum;
   iTitles = aTitles;

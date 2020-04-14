@@ -88,5 +88,89 @@ Both direct structure mapping and use of [Dictionary](https://github.com/arkhipe
 
 
 
+## ERROR CODES:
+
+### Parameters:
+
+```
+#define PARAMS_OK   0
+#define PARAMS_ERR  (-1)
+#define PARAMS_LEN  (-2)
+#define PARAMS_CRC  (-3)
+#define PARAMS_TOK  (-4)
+#define PARAMS_MEM  (-98)
+#define PARAMS_ACT  (-99)
+```
 
 
+
+`PARAMS_OK`    - operation finished successfully
+
+`PARAMS_ERR`  - operation finished with an error, unspecified 
+
+`PARAMS_LEN`  - requested size or EPROM size is not sufficient to store parameters
+
+`PARAMS_CRC`  - data inconsistency between parameters in memory and in EEPROM
+
+`PARAMS_TOK`  - parameter tokens do not match
+
+`PARAMS_MEM`  - failed to allocate memory for parameters buffer
+
+`PARAMS_ACT`  - parameters engine was not activated with `begin()` method (not allocated)
+
+
+
+### EspBootstrap:
+
+```
+#define BOOTSTRAP_OK        0
+#define BOOTSTRAP_ERR      (-1)
+#define BOOTSTRAP_TIMEOUT (-99)
+```
+
+
+
+`BOOTSTRAP_OK`	- bootstrap was successful. Parameters were entered and stored. No timeouts. 
+
+`BOOTSTRAP_ERR`  - bootstrap process ended with errors (e.g., webserver failed to initiate)
+
+`BOOTSTRAP_TIMEOUT`	- bootstrap process ran out of time waiting for user inputs. 
+
+
+
+### JsonConfig:
+
+```
+#define JSON_OK         0
+#define JSON_ERR      (-1)
+#define JSON_COMMA    (-2)
+#define JSON_COLON    (-3)
+#define JSON_QUOTE    (-4)
+#define JSON_BCKSL    (-5)
+#define JSON_HTTPERR  (-97)
+#define JSON_NOWIFI   (-98)
+#define JSON_EOF      (-99)
+```
+
+
+
+`JSON_OK`         - operation finished successfully. All fields were processed as expected. 
+
+`JSON_ERR`      - operation finished with unspecified error (reserved for future use and/or testing)
+
+`JSON_COMMA`    - missing comma. (Detected ":" before detecting a value)
+
+`JSON_COLON`    - missing colon. (Detected a comma or a new line before detecting a value)
+
+`JSON_QUOTE`   - missing closing quotation mark
+
+`JSON_BCKSL`    - orphaned back-slash. Back-slash not followed by a "verbatim" character. 
+
+`JSON_HTTPERR`  - general HTTP error. Cannot initiate a connection to provided URL. 
+
+`JSON_NOWIFI`   - device is not connected to WiFi
+
+`JSON_EOF`      - unexpected end of file. 
+
+**JsonConfig** also returns all HTTP error codes in case of HTTP GET operation failure. 
+For instance: `404` - page not found. 

@@ -104,8 +104,6 @@ const char* PAGE[] = { "EspBootstrap",
                      };
 
 // Boolean variable indicating that attempt to connect to WiFi ended in a timeout
-bool wifiTimeout;
-
 
 
 // ==== CODE ==============================
@@ -127,7 +125,9 @@ void printConfig() {
 
 // Arduino SETUP method
 void setup(void) {
-
+  bool wifiTimeout;
+  int rc;
+  
   // Setting up Serial console
 #ifdef _DEBUG_
   Serial.begin(115200);
@@ -158,7 +158,7 @@ void setup(void) {
 
   // Define EEPROM_MAX to explicitly set maximum EEPROM capacity for your chip
   // begin() method actaully checks if there is enough space in the EEPROM and return PARAMS_ERR if not
-  int rc = p->begin();
+  rc = p->begin();
   _PP(": EspBootStrap initialized. rc = ");_PL(rc);
 
   // load() methods attempts to load parameters from the EEPROM
@@ -177,8 +177,8 @@ void setup(void) {
   // 30 seconds is arbitrary - you can set it for longer of shorter period of time
   if (rc == PARAMS_OK) {
     _PP("Connecting to WiFi for 30 sec:");
-    setupWifi();
-    waitForWifi(30 * BOOTSTRAP_SECOND);
+    setupWifi(eg.ssid, eg.pwd);
+    wifiTimeout = waitForWifi(30 * BOOTSTRAP_SECOND);
   }
 
   // If loading of parameters failed, or a WiFi connection timed out
@@ -247,7 +247,7 @@ void loop(void) {
 }
 
 // This method prepares for WiFi connection
-void setupWifi() {
+void setupWifi(const char* ssid, const char* pwd) {
   _PL("Setup_wifi()");
 
   // We start by connecting to a WiFi network
@@ -256,24 +256,24 @@ void setupWifi() {
   WiFi.disconnect();
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(eg.ssid, eg.pwd);
+  WiFi.begin(ssid, pwd);
 }
 
 // This method waits for a WiFi connection for aTimeout milliseconds.
-void waitForWifi(unsigned long aTimeout) {
+// Returns true if connection times out
+bool waitForWifi(unsigned long aTimeout) {
   _PL("WaitForWifi()");
 
   unsigned long timeNow = millis();
-  wifiTimeout = false;
 
   while ( WiFi.status() != WL_CONNECTED ) {
-    delay(1000);
+    delay(500);
     _PP(".");
     if ( millis() - timeNow > aTimeout ) {
-      wifiTimeout = true;
       _PL(" WiFi connection timeout");
-      return;
+      return true;
     }
+  return false;
   }
 
   _PL(" WiFi connected");

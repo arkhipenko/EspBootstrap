@@ -4,7 +4,7 @@
 
    This example illustrates how litte code is actually required 
    to bootstrap a device using ESPBootstrap libraries. 
-   This is example #3 without comments. 
+   This is example #2 without comments. 
 
 */
 
@@ -22,10 +22,10 @@ const int NPARS_BTS = 3;
 
 Dictionary d(NPARS);
 
-bool wifiTimeout;
-int rc;
 
 void setup(void) {
+  bool wifiTimeout;
+  int rc;
 
   d("Title", "EspBootstrapD");
   d("ssid", "<wifi ssid>");
@@ -36,8 +36,8 @@ void setup(void) {
   if (p->begin() != PARAMS_OK) for(;;) ; // something is wrong with EEPROM!!
   
   if ( (rc = p->load()) == PARAMS_OK) {
-    setupWifi();
-    waitForWifi(30 * BOOTSTRAP_SECOND);
+    setupWifi( d["ssid"].c_str(), d["pwd"].c_str() );
+    wifiTimeout = waitForWifi(30 * BOOTSTRAP_SECOND);
   }
 
   if (rc != PARAMS_OK || wifiTimeout) {
@@ -51,20 +51,17 @@ void setup(void) {
 void loop(void) {
 }
 
-void setupWifi() {
+void setupWifi(const char* ssid, const char* pwd) {
   WiFi.disconnect();
   WiFi.mode(WIFI_STA);
-  WiFi.begin(d["ssid"].c_str(), d["pwd"].c_str());
+  WiFi.begin(ssid, pwd);
 }
 
-void waitForWifi(unsigned long aTimeout) {
+bool waitForWifi(unsigned long aTimeout) {
   unsigned long timeNow = millis();
-  wifiTimeout = false;
   while ( WiFi.status() != WL_CONNECTED ) {
-    delay(1000);
-    if ( millis() - timeNow > aTimeout ) {
-      wifiTimeout = true;
-      return;
-    }
+    delay(500);
+    if ( millis() - timeNow > aTimeout ) return true;
+  return false;
   }
 }

@@ -66,9 +66,6 @@ class Parameters {
     Parameters(uint16_t aAddress, const String& aToken, Dictionary& aDict, uint16_t aSize );
     ~Parameters();
 
-//    inline int8_t   lastError() {
-//      return iRc;
-//    }
     int8_t          begin();
     int8_t          load();
     int8_t          save();
@@ -90,16 +87,6 @@ Parameters::Parameters(uint16_t aAddress, const String& aToken, Dictionary& aDic
   iAddress = aAddress;
   iSize = aSize;
   iData = NULL;
-//  uint16_t maxLen = aToken.length() + aDict.size() + 4; // 4: 1 null for token, 1 crc8, 2 bytes for count
-//  if ( aSize < EEPROM_MAX && maxLen <= aSize) {
-//#if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
-//    EEPROM.begin(iSize);
-//#endif
-//    iActive = true;
-//  }
-//  else {
-//    iRc = PARAMS_LEN;
-//  }
 }
 
 Parameters::~Parameters() {
@@ -210,8 +197,19 @@ int8_t Parameters::save() {
   clear();
   uint8_t* p = iData;
 
+#ifdef _LIBDEBUG_
+Serial.println ("Parameters save: memory allocated and cleared");
+Serial.print("Token value: "); 
+Serial.println(iToken);
+Serial.println(iToken.c_str());
+#endif
+
   strcpy((char*)p, iToken.c_str());
   p += (iTl + 1);
+
+#ifdef _LIBDEBUG_
+Serial.println ("Parameters save: token copied");
+#endif
 
   *p++ = iDc & 0xff;
   *p++ = (iDc >> 8) & 0xff;
@@ -221,7 +219,17 @@ int8_t Parameters::save() {
     p += (iDict(i).length() + 1);
     strcpy((char*)p, iDict[i].c_str());
     p += (iDict[i].length() + 1);
+
+#ifdef _LIBDEBUG_
+Serial.printf ("Parameters save: k-v pair #%d copies: %s : %s\n", i, iDict(i).c_str(), iDict[i].c_str());
+#endif
+    
   }
+
+#ifdef _LIBDEBUG_
+Serial.println ("Parameters save: Key-value pairs copied");
+#endif
+
 
   p = iData;
 
@@ -233,6 +241,11 @@ int8_t Parameters::save() {
 #endif
   }
 
+#ifdef _LIBDEBUG_
+Serial.println ("Parameters save: EEPROM updated");
+#endif
+
+
 #if defined( ARDUINO_ARCH_AVR )
   EEPROM.update( iAddress + iSize - 1, checksum () );
 #else
@@ -242,8 +255,17 @@ int8_t Parameters::save() {
   EEPROM.commit();
 #endif
 
+#ifdef _LIBDEBUG_
+Serial.println ("Parameters save: checksum saved");
+#endif
+
+
   free(iData);
   iData = NULL;
+
+#ifdef _LIBDEBUG_
+Serial.println ("Parameters save: memory freed");
+#endif
 
 //  iRc = PARAMS_OK;
   return PARAMS_OK;
@@ -281,7 +303,7 @@ uint8_t Parameters::checksum () {
 
 
 
-// ==== IMPLEMENTATION WITH TEMPLATE AND MEMROY MAPPING =============================================
+// ==== IMPLEMENTATION WITH TEMPLATE AND MEMORY MAPPING =============================================
 #else
 
 template<typename T>
@@ -290,9 +312,6 @@ class Parameters {
     Parameters(uint16_t address, const String& token, T* ptr, T* deflt = NULL, uint16_t maxlength = EEPROM_MAX );
     ~Parameters();
 
-//    inline int8_t   lastError() {
-//      return iRc;
-//    }
     int8_t          begin();
     int8_t          load();
     int8_t          save();
@@ -302,7 +321,6 @@ class Parameters {
   private:
     uint8_t         checksum ();
 
-//    int8_t          iRc;
     int8_t          iActive;
     T*              iData;
     T*              iDefault;
@@ -317,22 +335,11 @@ template<typename T>
 Parameters<T>::Parameters(uint16_t address, const String& token, T* ptr, T* deflt, uint16_t maxlength ) : iToken(token)  {
   iActive = false;
   iAddress = address;
-  //  iToken = (String&) token;
+
   iData = ptr;
   iDefault = deflt;
   iLen = sizeof(T);
   iMaxLen = maxlength;
-//  if ( iMaxLen < 4 ) iMaxLen = 4;
-//  if ( iMaxLen >= EEPROM_MAX - 1 ) iMaxLen = EEPROM_MAX - 1;
-//  if ( iLen + 1 <= iMaxLen ) {
-//#if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
-//    EEPROM.begin(iLen + 1);
-//#endif
-//    iActive = true;
-//  }
-//  else {
-//    iRc = PARAMS_LEN;
-//  }
 }
 
 template<typename T>
@@ -370,7 +377,6 @@ int8_t Parameters<T>::load() {
   uint8_t *ptr = (uint8_t *) iData;
 
   if (!iActive) {
-//    iRc = PARAMS_ACT;
     return PARAMS_ACT;
   }
 
@@ -381,16 +387,13 @@ int8_t Parameters<T>::load() {
 
   if (crc != checksum () ) {
     loadDefaults();
-//    iRc = PARAMS_CRC;
     return PARAMS_CRC;
   }
 
   if ( strncmp( (const char *) iToken.c_str(), (const char *) iData, iMaxLen ) != 0 ) {
     loadDefaults();
-//    iRc = PARAMS_TOK;
     return PARAMS_TOK;
   }
-//  iRc = PARAMS_OK;
   return PARAMS_OK;
 }
 
@@ -400,12 +403,10 @@ int8_t Parameters<T>::save() {
   uint8_t *ptr = (uint8_t *) iData;
 
   if (!iActive) {
-//    iRc = PARAMS_ACT;
     return PARAMS_ACT;
   }
 
   if ( sizeof(T) >= iMaxLen ) {
-//    iRc = PARAMS_LEN;
     return PARAMS_LEN;
   }
   for (uint16_t i = 0; i < iLen; i++, ptr++) {
@@ -424,7 +425,6 @@ int8_t Parameters<T>::save() {
   EEPROM.commit();
 #endif
 
-//  iRc = PARAMS_OK;
   return PARAMS_OK;
 }
 

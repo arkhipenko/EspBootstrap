@@ -28,15 +28,12 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _JSONCONFIG_H_
-#define _JSONCONFIG_H_
+#ifndef _JSONCONFIGHTTP_H_
+#define _JSONCONFIGHTTP_H_
 
 
-#include <Arduino.h>
-
-#ifdef _USE_DICTIONARY_
+#include <JsonConfigBase.h>
 #include <Dictionary.h>
-#endif
 
 #if defined( ARDUINO_ARCH_ESP8266 )
 #include <WiFiClient.h>
@@ -48,38 +45,26 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <HTTPClient.h>
 #endif
 
-#define JSON_OK         0
-#define JSON_ERR      (-1)
-#define JSON_COMMA    (-2)
-#define JSON_COLON    (-3)
-#define JSON_QUOTE    (-4)
-#define JSON_BCKSL    (-5)
+
 #define JSON_HTTPERR  (-97)
 #define JSON_NOWIFI   (-98)
-#define JSON_EOF      (-99)
 
-class JsonConfig {
+
+class JsonConfigHttp : public JsonConfigBase {
   public:
-    JsonConfig();
-    ~JsonConfig();
+    JsonConfigHttp();
+    virtual ~JsonConfigHttp();
 
-#ifdef _USE_DICTIONARY_
-    int8_t   parseHttp(const String aUrl, Dictionary& aDict, int aNum = 0);
-#else
-    int8_t   parseHttp(const String aUrl, char** aMap, int aNum);
-#endif
+    int8_t   parse(const String aUrl, Dictionary& aDict, int aNum = 0);
 };
 
-static JsonConfig JSONConfig;
+static JsonConfigHttp JSONConfig;
 
-JsonConfig::JsonConfig() {}
-JsonConfig::~JsonConfig() {}
+JsonConfigHttp::JsonConfigHttp() {}
+JsonConfigHttp::~JsonConfigHttp() {}
 
-#ifdef _USE_DICTIONARY_
-int8_t JsonConfig::parseHttp(const String aUrl, Dictionary& aDict, int aNum) {
-#else
-int8_t JsonConfig::parseHttp(const String aUrl, char** aMap, int aNum) {
-#endif
+int8_t JsonConfigHttp::parse(const String aUrl, Dictionary& aDict, int aNum) {
+
   WiFiClient client;
   HTTPClient http;
   String payload;
@@ -105,7 +90,6 @@ Serial.printf("JsonConfig: Connecting to: %s\n", aUrl.c_str());
         String currentValue;
 
         for (int i = 0; i < len; i++, c++) {
-          char toAdd = *c;
           if (nextVerbatim) {
             nextVerbatim = false;
           }
@@ -123,11 +107,7 @@ Serial.printf("JsonConfig: Connecting to: %s\n", aUrl.c_str());
               else {
                 insideQoute = false;
                 if (isValue) {
-#ifdef _USE_DICTIONARY_
                   aDict(currentKey, currentValue);
-#else
-                  strcpy(aMap[p++], currentValue.c_str());
-#endif
                   currentValue = String();
                   currentKey = String();
                   if (aNum > 0 && p >= aNum) break;
@@ -171,4 +151,4 @@ Serial.printf("JsonConfig: Connecting to: %s\n", aUrl.c_str());
 }
 
 
-#endif // _JSONCONFIG_H_
+#endif // _JSONCONFIGHTTP_H_

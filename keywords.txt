@@ -6,11 +6,18 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-EspBootstrap	KEYWORD1
+EspBootstrapDict	KEYWORD1
+EspBootstrapMap	KEYWORD1
 
-Parameters	KEYWORD1
+ParametersEEPROM	KEYWORD1
+ParametersEEPROMMap	KEYWORD1
+ParametersSPIFFS	KEYWORD1
+ParametersSPIFFSMap	KEYWORD1
 
-JsonConfig	KEYWORD1
+JsonConfigHttp	KEYWORD1
+JsonConfigHttpMap	KEYWORD1
+JsonConfigSPIFFS	KEYWORD1
+JsonConfigSPIFFSMap	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -24,7 +31,7 @@ loadDefaults	KEYWORD2
 load	KEYWORD2
 save	KEYWORD2
 
-parseHttp	KEYWORD2
+parse	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -41,6 +48,8 @@ PARAMS_ERR	LITERAL1
 PARAMS_LEN	LITERAL1
 PARAMS_CRC	LITERAL1
 PARAMS_TOK	LITERAL1
+PARAMS_FDE	LITERAL1
+PARAMS_FER	LITERAL1
 PARAMS_MEM	LITERAL1
 PARAMS_ACT	LITERAL1
 
@@ -53,6 +62,8 @@ JSON_BCKSL	LITERAL1
 JSON_HTTPERR	LITERAL1
 JSON_NOWIFI	LITERAL1
 JSON_EOF	LITERAL1
+JSON_FILERR	LITERAL1
+JSON_FILENE	LITERAL1
 JSONConfig	LITERAL1
 
 #######################################

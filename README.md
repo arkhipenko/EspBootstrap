@@ -2,6 +2,8 @@
 
 ### A simple way to get your ESP8266 or ESP32 project configured and online quickly
 
+[![arduino-library-badge](https://www.ardu-badge.com/badge/EspBootstrap.svg?)](https://www.ardu-badge.com/EspBootstrap)
+
 #### Background
 
 A typical journey of an IoT device on a first boot is:

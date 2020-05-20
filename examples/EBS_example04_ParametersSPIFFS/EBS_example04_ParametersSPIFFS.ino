@@ -11,7 +11,7 @@
    5. If not successful - chip will create an Access Point names ESPNNN-XXXXXX
       a. Connect your phone/PC to that Access Point. There is no password
       b. Connect your browser to http://10.1.1.1. You have 5 minutes to do steps 7-9 below
-      c. Populate the Wifi Seetings
+      c. Populate the Wifi Settings
       d. Press "Submit" button.
       e. Device will reboot
    6. Device should connect to your WiFi network and read, parse and save the configuration to SPIFFS filesystem

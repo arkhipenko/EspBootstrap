@@ -37,10 +37,10 @@ Dictionary approach is the default.
 
 #### Typical Implementation Journey
 
-(see [example #2](https://github.com/arkhipenko/EspBootstrap/blob/master/examples/EBS_example02/EBS_example02.ino))
+(see [example #2](https://github.com/arkhipenko/EspBootstrap/blob/master/examples/EBS_example02_ParametersEEPROM/EBS_example02_ParametersEEPROM.ino))
 
-1.  Create a Dictionary object 
-2. Pass dictionary to appropriate **ESPBootstrap** and **JSONConfig** objects to load or obtain configuration from a user, device filesystem and/or from the web
+1. Create a Dictionary object (Make sure there is a "Title" key created as a first dictionary element for the web form)
+2. Pass dictionary to appropriate **ESPBootstrap** and **JSONConfig** objects to load or obtain configuration from a user, device file system and/or from the web
 
 
 
@@ -62,14 +62,11 @@ Dictionary approach is the default.
 
 #### Typical Implementation Journey 
 
-(see [example #1](https://github.com/arkhipenko/EspBootstrap/blob/master/examples/EBS_example01/EBS_example01.ino))
+(see [example #1](https://github.com/arkhipenko/EspBootstrap/blob/master/examples/EBS_example01_ParametersEEPROMMap/EBS_example01_ParametersEEPROMMap.ino))
 
 1. Define Parameters Structure
-
 2. Define Parameter "defaults"
-
 3. Describe Parameter structure layout for **ESPBootstrap** and **JSONConfig** 
-
 4. Load or obtain configuration from a user and/or from the web
 
    
@@ -88,7 +85,7 @@ Dictionary approach is the default.
 
 ## Object Types
 
-Types of **Parameters**, **JsonConfig** and **EspBootstrap** objects are chosen based on where you want to store your configuration and where you want to source your updates from:
+Types of **Parameters**, **JsonConfig** and **EspBootstrap** objects should be chosen based on where you want to store your configuration and where you want to source your updates from:
 
 
 
@@ -154,6 +151,8 @@ ParametersSPIFFS
 ```
 
 If additional storage or update types are required, they could be implemented later (e.g., ParametersSD or JsonConfigFTP)
+
+**NOTE:** Only one type of storage is supported with the static `ESPBootstrap` and `JSONConfig` objects by default. This should cover 99% of the use cases. However, if you need to support multiple storage types, compile the library with `_JSONCONFIG_NOSTATIC` compile option and create appropriate objects explicitly. 
 
 
 

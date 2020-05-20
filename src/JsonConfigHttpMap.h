@@ -57,7 +57,9 @@ class JsonConfigHttpMap : public JsonConfigBase {
     int8_t   parse(const String aUrl, char** aMap, int aNum);
 };
 
+#ifndef _JSONCONFIG_NOSTATIC
 static JsonConfigHttpMap JSONConfig;
+#endif 
 
 JsonConfigHttpMap::JsonConfigHttpMap() {}
 JsonConfigHttpMap::~JsonConfigHttpMap() {}
@@ -114,17 +116,29 @@ Serial.printf("JsonConfig: Connecting to: %s\n", aUrl.c_str());
               }
             }
             if (*c == '\n') {
-              if ( insideQoute ) return JSON_QUOTE;
-              if ( nextVerbatim ) return JSON_BCKSL;
+              if ( insideQoute ) {
+                http.end();
+                return JSON_QUOTE;
+              }
+              if ( nextVerbatim ) {
+                http.end();
+                return JSON_BCKSL;
+              }
             }
             if (!insideQoute) {
               if (*c == ':') {
-                if ( isValue ) return JSON_COMMA; //missing comma probably
+                if ( isValue ) {
+                  http.end();
+                  return JSON_COMMA; //missing comma probably
+                }
                 isValue = true;
                 continue;
               }
               if (*c == ',') {
-                if ( !isValue ) return JSON_COLON; //missing colon probably
+                if ( !isValue ) {
+                  http.end();
+                  return JSON_COLON; //missing colon probably
+                }
                 isValue = false;
                 continue;
               }
@@ -135,6 +149,7 @@ Serial.printf("JsonConfig: Connecting to: %s\n", aUrl.c_str());
             else currentKey.concat(*c);
           }
         }
+        http.end();
         if (insideQoute || nextVerbatim || (aNum > 0 && p < aNum )) return JSON_EOF;
         return JSON_OK;
       }
@@ -145,8 +160,10 @@ Serial.printf("JsonConfig: Connecting to: %s\n", aUrl.c_str());
     http.end();
   }
   else {
+    http.end();
     return JSON_HTTPERR;
   }
+  return JSON_ERR;
 }
 
 

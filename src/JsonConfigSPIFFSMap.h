@@ -56,7 +56,9 @@ class JsonConfigSPIFFSMap : public JsonConfigBase {
     int8_t   parse(const String aUrl, char** aMap, int aNum);
 };
 
+#ifndef _JSONCONFIG_NOSTATIC
 static JsonConfigSPIFFSMap JSONConfig;
+#endif
 
 JsonConfigSPIFFSMap::JsonConfigSPIFFSMap() {}
 JsonConfigSPIFFSMap::~JsonConfigSPIFFSMap() {}

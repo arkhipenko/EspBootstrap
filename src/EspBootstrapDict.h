@@ -104,9 +104,13 @@ int8_t EspBootstrapDict::doRun() {
 #endif
 #if defined( ARDUINO_ARCH_ESP32 )
   ssid += String((uint32_t)( ESP.getEfuseMac() & 0xFFFFFFFFL ), HEX);
-#endif
   WiFi.softAP( ssid.c_str());
+  delay(50);
+#endif
+
   WiFi.softAPConfig(APIP, APIP, APMASK);
+  delay(50);
+  WiFi.softAP( ssid.c_str());
   yield();
 
   iServer = new WebServer(80);
@@ -124,11 +128,11 @@ int8_t EspBootstrapDict::doRun() {
     if ( millis() - timeNow > iTimeout ) return BOOTSTRAP_TIMEOUT;
   }
 
-  return BOOTSTRAP_OK;
   iServer->stop();
   iServer->close();
   delete iServer;
   iServer = NULL;
+  return BOOTSTRAP_OK;
 }
 
 
@@ -141,7 +145,7 @@ void EspBootstrapDict::handleRoot() {
   iServer->sendContent("<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/></head><body>");
 
   Dictionary& d = *iDict;
-  snprintf(buf, BUFLEN, "<h2 style=\"color:blue;\">%s</h2><form action=\"/submit.html\">", d(0).c_str() );
+  snprintf(buf, BUFLEN, "<h2 style=\"color:blue;\">%s</h2><form action=\"/submit.html\">", d[0].c_str() );
   iServer->sendContent(buf);
 
   for (int i = 1; i <= iNum; i++) {

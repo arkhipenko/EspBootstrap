@@ -55,7 +55,9 @@ class JsonConfigSPIFFS : public JsonConfigBase {
     int8_t   parse(const String aUrl, Dictionary& aDict, int aNum = 0);
 };
 
+#ifndef _JSONCONFIG_NOSTATIC
 static JsonConfigSPIFFS JSONConfig;
+#endif
 
 JsonConfigSPIFFS::JsonConfigSPIFFS() {
   //  SPIFFS.begin();

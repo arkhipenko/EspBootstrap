@@ -118,11 +118,11 @@ int8_t EspBootstrapMap::doRun() {
     if ( millis() - timeNow > iTimeout ) return BOOTSTRAP_TIMEOUT;
   }
 
-  return BOOTSTRAP_OK;
   iServer->stop();
   iServer->close();
   delete iServer;
   iServer = NULL;
+  return BOOTSTRAP_OK;
 }
 
 

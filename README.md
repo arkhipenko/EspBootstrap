@@ -99,7 +99,7 @@ Types of **Parameters**, **JsonConfig** and **EspBootstrap** objects should be c
 #include <JsonConfigHttp.h>
 ```
 
-See examples #2 and #3 for implementation details. 
+See examples #2 and #3 (3 and 3b) for implementation details. 
 
 
 

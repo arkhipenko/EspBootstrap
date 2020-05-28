@@ -37,21 +37,106 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #define JSON_OK         0
 #define JSON_ERR      (-1)
-#define JSON_COMMA    (-2)
-#define JSON_COLON    (-3)
-#define JSON_QUOTE    (-4)
-#define JSON_BCKSL    (-5)
+#define JSON_COMMA    (-20)
+#define JSON_COLON    (-21)
+#define JSON_QUOTE    (-22)
+#define JSON_BCKSL    (-23)
+#define JSON_MEM      (-24)
 #define JSON_EOF      (-99)
 
 class JsonConfigBase {
   public:
     JsonConfigBase();
     virtual ~JsonConfigBase();
-
+    
+  protected:
+    virtual int8_t  _doParse(size_t aLen, uint16_t aNum);
+    virtual char    _nextChar() { return JSON_EOF; };
+    virtual int8_t  _storeKeyValue(const char* aKey, const char* aValue) { return JSON_MEM; };
 };
 
 JsonConfigBase::JsonConfigBase() {}
 JsonConfigBase::~JsonConfigBase() {}
+
+int8_t JsonConfigBase::_doParse(size_t aLen, uint16_t aNum) {
+
+  bool      insideQoute = false;
+  bool      nextVerbatim = false;
+  bool      isValue = false;
+  int       p = 0;
+  int8_t    rc;
+  String    currentKey = String();
+  String    currentValue = String();
+
+  for (int i = 0; i < aLen; i++) {
+    char c = _nextChar();
+    if ( c < 0 ) break; //EOF
+#ifdef _LIBDEBUG_
+    Serial.print(c);
+#endif
+    if (nextVerbatim) {
+      nextVerbatim = false;
+    }
+    else {
+      // process all special cases: '\', '"', ':', and ','
+      if (c == '\\' ) {
+        nextVerbatim = true;
+        continue;
+      }
+      if (c == '\"') {
+        if (!insideQoute) {
+          insideQoute = true;
+          continue;
+        }
+        else {
+          insideQoute = false;
+          if (isValue) {
+            rc = _storeKeyValue( currentKey.c_str(), currentValue.c_str() );
+            if (rc) return JSON_MEM;  // if error - exit with an error code
+            currentValue = String();
+            currentKey = String();
+            p++;
+            if (aNum > 0 && p >= aNum) break;
+          }
+        }
+      }
+      if (c == '\n') {
+        if ( insideQoute ) {
+          return JSON_QUOTE;
+        }
+        if ( nextVerbatim ) {
+          return JSON_BCKSL;
+        }
+      }
+      if (!insideQoute) {
+        if (c == ':') {
+          if ( isValue ) {
+            return JSON_COMMA; //missing comma probably
+          }
+          isValue = true;
+          continue;
+        }
+        if (c == ',') {
+          if ( !isValue ) {
+            return JSON_COLON; //missing colon probably
+          }
+          isValue = false;
+          continue;
+        }
+      }
+    }
+    if (insideQoute) {
+      if (isValue) currentValue.concat(c);
+      else currentKey.concat(c);
+    }
+  }
+  if (insideQoute || nextVerbatim || (aNum > 0 && p < aNum )) return JSON_EOF;
+#ifdef _LIBDEBUG_
+    Serial.printf("JsonConfigBase::_doParse: JSON_OK\n");
+#endif
+  return JSON_OK;
+}
+
 
 
 #endif // _JSONCONFIGBASE_H_

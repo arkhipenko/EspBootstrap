@@ -53,6 +53,15 @@ class JsonConfigSPIFFS : public JsonConfigBase {
     virtual ~JsonConfigSPIFFS();
 
     int8_t   parse(const String aUrl, Dictionary& aDict, int aNum = 0);
+
+  protected:
+    virtual char    _nextChar();
+    virtual int8_t  _storeKeyValue(const char* aKey, const char* aValue);
+    virtual int8_t  _doParse(size_t aLen, uint16_t aNum) { return JsonConfigBase::_doParse(aLen, aNum); };
+    
+  private:
+    Dictionary*     iDict;
+    File            iF;
 };
 
 #ifndef _JSONCONFIG_NOSTATIC
@@ -68,90 +77,35 @@ JsonConfigSPIFFS::~JsonConfigSPIFFS() {
 }
 
 int8_t JsonConfigSPIFFS::parse(const String aUrl, Dictionary& aDict, int aNum) {
-
+  int8_t rc; 
+  
   if ( !SPIFFS.exists(aUrl) ) { // || !SPIFFS.isFile(aUrl) ) {
     return JSON_FILENE;
   }
 
-  File f = SPIFFS.open(aUrl, "r");
-  if ( !f ) {
+  iF = SPIFFS.open(aUrl, "r");
+  if ( !iF ) {
     return JSON_FILERR;
   }
 
-
-  bool insideQoute = false;
-  bool nextVerbatim = false;
-  bool isValue = false;
-  int len = f.size();
-  int p = 0;
-  String currentKey;
-  String currentValue;
-
-  for (int i = 0; i < len; i++) {
-    char c = f.read();
-    if (nextVerbatim) {
-      nextVerbatim = false;
-    }
-    else {
-      // process all special cases: '\', '"', ':', and ','
-      if (c == '\\' ) {
-        nextVerbatim = true;
-        continue;
-      }
-      if (c == '\"') {
-        if (!insideQoute) {
-          insideQoute = true;
-          continue;
-        }
-        else {
-          insideQoute = false;
-          if (isValue) {
-            aDict(currentKey, currentValue);
-            currentValue = String();
-            currentKey = String();
-            if (aNum > 0 && p >= aNum) break;
-          }
-        }
-      }
-      if (c == '\n') {
-        if ( insideQoute ) {
-          f.close();
-          return JSON_QUOTE;
-        }
-        if ( nextVerbatim ) {
-          f.close();
-          return JSON_BCKSL;
-        }
-      }
-      if (!insideQoute) {
-        if (c == ':') {
-          if ( isValue ) {
-            f.close();
-            return JSON_COMMA; //missing comma probably
-          }
-          isValue = true;
-          continue;
-        }
-        if (c == ',') {
-          if ( !isValue ) {
-            f.close();
-            return JSON_COLON; //missing colon probably
-          }
-          isValue = false;
-          continue;
-        }
-      }
-    }
-    if (insideQoute) {
-      if (isValue) currentValue.concat(c);
-      else currentKey.concat(c);
-    }
-  }
-  f.close();
-  if (insideQoute || nextVerbatim || (aNum > 0 && p < aNum )) return JSON_EOF;
-  return JSON_OK;
+  iDict = &aDict;
+  rc = _doParse ( iF.size(), aNum );
+  
+  iF.close();
+  return rc;
 }
 
 
+char    JsonConfigSPIFFS::_nextChar() {
+    return iF.read();
+}
+
+
+int8_t  JsonConfigSPIFFS::_storeKeyValue(const char* aKey, const char* aValue){
+#ifdef _LIBDEBUG_
+    Serial.printf("JsonConfigSPIFFS::_storeKeyValue: %s:%s\n", aKey, aValue );
+#endif
+    return iDict->insert(aKey, aValue);
+}
 
 #endif // _JSONCONFIGSPIFFS_H_

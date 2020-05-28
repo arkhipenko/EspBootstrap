@@ -52,10 +52,25 @@ POSSIBILITY OF SUCH DAMAGE.
 
 class JsonConfigHttp : public JsonConfigBase {
 public:
-	JsonConfigHttp();
-	virtual ~JsonConfigHttp();
+    JsonConfigHttp();
+    virtual ~JsonConfigHttp();
 
-	int8_t   parse(const String aUrl, Dictionary& aDict, int aNum = 0);
+    int8_t   parse(const String aUrl, Dictionary& aDict, int aNum = 0);
+    int8_t   parse(const String aHost, uint16_t aPort, String aUrl, Dictionary& aDict, int aNum = 0);
+        
+    protected:
+    virtual char    _nextChar();
+    virtual int8_t  _storeKeyValue(const char* aKey, const char* aValue);
+    virtual int8_t  _doParse(size_t aLen, uint16_t aNum) { return JsonConfigBase::_doParse(aLen, aNum); };
+        
+  private:
+    int8_t          parseCommon(int aHttpResult, int aNum);
+    
+    Dictionary*     iDict;
+    WiFiClient      iClient;
+    HTTPClient      iHttp;
+    String          iPayload;
+    size_t          iIndex;
 };
 
 #ifndef _JSONCONFIG_NOSTATIC
@@ -65,108 +80,75 @@ static JsonConfigHttp JSONConfig;
 JsonConfigHttp::JsonConfigHttp() {}
 JsonConfigHttp::~JsonConfigHttp() {}
 
-int8_t JsonConfigHttp::parse(const String aUrl, Dictionary& aDict, int aNum) {
 
-	WiFiClient client;
-	HTTPClient http;
-	String payload;
+int8_t JsonConfigHttp::parse(const String aHost, uint16_t aPort, const String aUrl, Dictionary& aDict, int aNum) {
+    int8_t rc;
+    WiFiClient      client;
 
-	if (WiFi.status() != WL_CONNECTED) return JSON_NOWIFI;
+    if (WiFi.status() != WL_CONNECTED) return JSON_NOWIFI;
 #ifdef _LIBDEBUG_
-	Serial.printf("JsonConfig: Connecting to: %s\n", aUrl.c_str());
+    Serial.printf("JsonConfig: Connecting to: %s\n", aUrl.c_str());
 #endif
-	if (http.begin(client, aUrl)) {
-		int httpCode = http.GET();
-		// httpCode will be negative on error
-		if (httpCode > 0) {
-			if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-				payload = http.getString();
-
-				bool insideQoute = false;
-				bool nextVerbatim = false;
-				bool isValue = false;
-				const char* c = payload.c_str();
-				int len = payload.length();
-				int p = 0;
-				String currentKey;
-				String currentValue;
-
-				for (int i = 0; i < len; i++, c++) {
-					if (nextVerbatim) {
-						nextVerbatim = false;
-					}
-					else {
-						// process all special cases: '\', '"', ':', and ','
-						if (*c == '\\') {
-							nextVerbatim = true;
-							continue;
-						}
-						if (*c == '\"') {
-							if (!insideQoute) {
-								insideQoute = true;
-								continue;
-							}
-							else {
-								insideQoute = false;
-								if (isValue) {
-									aDict(currentKey, currentValue);
-									currentValue = String();
-									currentKey = String();
-									if (aNum > 0 && p >= aNum) break;
-								}
-							}
-						}
-						if (*c == '\n') {
-							if (insideQoute) {
-								http.end();
-								return JSON_QUOTE;
-							}
-							if (nextVerbatim) {
-								http.end();
-								return JSON_BCKSL;
-							}
-						}
-						if (!insideQoute) {
-							if (*c == ':') {
-								if (isValue) {
-									http.end();
-									return JSON_COMMA; //missing comma probably
-								}
-								isValue = true;
-								continue;
-							}
-							if (*c == ',') {
-								if (!isValue) {
-									http.end();
-									return JSON_COLON; //missing colon probably
-								}
-								isValue = false;
-								continue;
-							}
-						}
-					}
-					if (insideQoute) {
-						if (isValue) currentValue.concat(*c);
-						else currentKey.concat(*c);
-					}
-				}
-				http.end();
-				if (insideQoute || nextVerbatim || (aNum > 0 && p < aNum)) return JSON_EOF;
-				return JSON_OK;
-			}
-		}
-		else {
-			http.end();
-			return httpCode;
-		}
-		http.end();
-	}
-	else {
-		http.end();
-		return JSON_HTTPERR;
-	}
-	return JSON_ERR;  // should never get here anyway - but stupid compiler complains. 
+    iDict = &aDict;
+    rc = parseCommon( iHttp.begin(client, aHost, aPort, aUrl), aNum );
+    iHttp.end();
+    return rc;
 }
 
+
+int8_t JsonConfigHttp::parse(const String aUrl, Dictionary& aDict, int aNum) {
+    int8_t rc;
+    WiFiClient      client;
+    
+    if (WiFi.status() != WL_CONNECTED) return JSON_NOWIFI;
+#ifdef _LIBDEBUG_
+    Serial.printf("JsonConfig: Connecting to: %s\n", aUrl.c_str());
+#endif
+    iDict = &aDict;
+    rc = parseCommon( iHttp.begin(client, aUrl), aNum );
+    iHttp.end();
+    return rc;
+}
+
+
+int8_t  JsonConfigHttp::parseCommon(int aHttpResult, int aNum) {
+    int8_t rc;
+     
+    if ( aHttpResult ) {
+        int httpCode = iHttp.GET();
+            // httpCode will be negative on error
+        if (httpCode > 0) {
+            if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+                iPayload = iHttp.getString();
+                iIndex = 0;
+                rc = _doParse(iPayload.length(), aNum);
+                return rc;
+            }
+        }
+        else {
+            return httpCode;
+        }
+        return JSON_ERR;  // should never get here anyway - but stupid compiler complains. 
+    }
+    else {
+        return JSON_HTTPERR;
+    }
+    return JSON_ERR;  // should never get here anyway - but stupid compiler complains. 
+}
+
+
+char    JsonConfigHttp::_nextChar() {
+    if (iIndex < iPayload.length() ) {
+        return iPayload[iIndex++];
+    }
+    else {
+        return JSON_EOF;
+    }
+}
+
+
+int8_t  JsonConfigHttp::_storeKeyValue(const char* aKey, const char* aValue){
+    return iDict->insert(aKey, aValue);
+}
 
 #endif // _JSONCONFIGHTTP_H_

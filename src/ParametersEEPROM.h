@@ -89,7 +89,7 @@ ParametersEEPROM::~ParametersEEPROM() {
 
 
 int8_t ParametersEEPROM::begin() {
-  uint16_t maxLen = iToken.length() + iDict.size() + 4; // 4: 1 null for token, 1 crc8, 2 bytes for count
+  uint16_t maxLen = iToken.length() + iDict.esize() + 4; // 4: 1 null for token, 1 crc8, 2 bytes for count
   if ( iSize < EEPROM_MAX && maxLen <= iSize) {
 #if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
     EEPROM.begin(iSize);
@@ -168,7 +168,7 @@ int8_t ParametersEEPROM::save() {
   }
 
   uint16_t iTl = iToken.length();
-  uint16_t iDs = iDict.size();
+  uint16_t iDs = iDict.esize();
   uint16_t iDc = iDict.count();
   uint16_t maxLen = iTl + iDs + 4;
 

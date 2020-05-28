@@ -5,11 +5,14 @@
    This is example #1 without comments or debug messages
 */
 
+#define CTOKEN  "EBS1A"
+
+
 #include <ParametersEEPROMMap.h>  // Parameters stored in EEPROM 
 #include <EspBootstrapMap.h>      // ESP Bootstrap for memory structure
 #include <JsonConfigHttpMap.h>    // Json parsing from HTTP host into memory structure
 
-#define CTOKEN  "EBS1A"
+
 const String TOKEN(CTOKEN);
 const int NPARS = 7;
 

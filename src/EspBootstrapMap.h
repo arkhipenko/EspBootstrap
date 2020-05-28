@@ -98,9 +98,13 @@ int8_t EspBootstrapMap::doRun() {
 #endif
 #if defined( ARDUINO_ARCH_ESP32 )
   ssid += String((uint32_t)( ESP.getEfuseMac() & 0xFFFFFFFFL ), HEX);
-#endif
   WiFi.softAP( ssid.c_str());
+  delay(50);
+#endif
+
   WiFi.softAPConfig(APIP, APIP, APMASK);
+  delay(50);
+  WiFi.softAP( ssid.c_str());
   yield();
 
   iServer = new WebServer(80);

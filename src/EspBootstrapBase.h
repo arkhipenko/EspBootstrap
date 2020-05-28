@@ -60,11 +60,6 @@ class EspBootstrapBase {
     EspBootstrapBase();
     virtual ~EspBootstrapBase();
 
-//    virtual int8_t  run() = 0;
-//    virtual void    handleRoot () = 0;
-//    virtual void    handleSubmit () = 0;
-
-
   protected:
     int8_t            iAllDone;
     WebServer*        iServer;
@@ -86,8 +81,6 @@ EspBootstrapBase::~EspBootstrapBase () {
   }
 }
 
-#define   SSID_PREFIX   "BOOTSTRAP-AP"
-
 #if defined( ARDUINO_ARCH_ESP8266 )
 #define   SSID_PREFIX   "ESP8266-"
 #endif
@@ -96,6 +89,10 @@ EspBootstrapBase::~EspBootstrapBase () {
 #define   SSID_PREFIX   "ESP32-"
 #endif
 
+
+#ifndef SSID_PREFIX
+#define   SSID_PREFIX   "BOOTSTRAP-AP"
+#endif
 
 
 #endif // _ESPBOOTSTRAPBASE_H_

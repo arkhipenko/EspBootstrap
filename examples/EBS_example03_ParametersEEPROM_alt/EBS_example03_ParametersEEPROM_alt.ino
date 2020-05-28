@@ -33,11 +33,6 @@
 #define SSID1 "YOUR WIFI SSID HERE"
 #define PWD1  "YOUR WIFI PASSWORD HERE"
 
-
-#include <ParametersEEPROM.h>
-#include <EspBootstrapDict.h>
-#include <JsonConfigHttp.h>
-
 #define _DEBUG_
 //#define _TEST_
 
@@ -48,6 +43,11 @@
 #define _PP(a)
 #define _PL(a)
 #endif
+
+// ==== Includes ===================================
+#include <ParametersEEPROM.h>
+#include <EspBootstrapDict.h>
+#include <JsonConfigHttp.h>
 
 // ==== Parameters and BootStrap ===================
 

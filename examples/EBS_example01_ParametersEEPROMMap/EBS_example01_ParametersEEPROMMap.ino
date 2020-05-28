@@ -20,10 +20,6 @@
 
 */
 
-#include <ParametersEEPROMMap.h>  // Parameters stored in EEPROM 
-#include <EspBootstrapMap.h>      // ESP Bootstrap for memory structure
-#include <JsonConfigHttpMap.h>    // Json parsing from HTTP host into memory structure
-
 #define _DEBUG_
 //#define _TEST_
 
@@ -34,6 +30,12 @@
 #define _PP(a)
 #define _PL(a)
 #endif
+
+// ==== Includes ===================================
+#include <ParametersEEPROMMap.h>  // Parameters stored in EEPROM 
+#include <EspBootstrapMap.h>      // ESP Bootstrap for memory structure
+#include <JsonConfigHttpMap.h>    // Json parsing from HTTP host into memory structure
+
 
 // ==== Parameters and BootStrap ===================
 

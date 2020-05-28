@@ -25,13 +25,7 @@
 #define PWD1  "YOUR WIFI PASSWORD HERE"
 
 #define _DEBUG_
-//#define _LIBDEBUG_
 //#define _TEST_
-
-#include <ParametersSPIFFS.h>
-#include <EspBootstrapDict.h>
-
-
 
 #ifdef _DEBUG_
 #define _PP(a) Serial.print(a);
@@ -40,6 +34,10 @@
 #define _PP(a)
 #define _PL(a)
 #endif
+
+// ==== Includes ===================================
+#include <ParametersSPIFFS.h>
+#include <EspBootstrapDict.h>
 
 // ==== Parameters and BootStrap ===================
 

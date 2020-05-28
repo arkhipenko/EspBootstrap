@@ -2,29 +2,36 @@
    Copyright (c) 2020, Anatoli Arkhipenko
    All rights reserved.
 
-   This example illustrates how to use EspBootstrap library with Dictionry as parameters. 
+   This example illustrates how to use EspBootstrap library.
    The OTA update is not included.
 
    1. Compile and upload into the chip
    2. Start Serial monitor
    3. Boot up the chip for the first time
-   4. Chip will create an Access Point names ESPNNN-XXXXXX
-   5. Connect your phone/PC to that Access Point. There is no password
-   6. Connect your browser to http://10.1.1.1. You have 5 minutes to do steps 7-9 below
-   7. Populate the Wifi Seetings
-   8. Populate the path to a valid JSON configuration file
-   (e.g.,: http://raw.githubusercontent.com/arkhipenko/EspBootstrap/master/examples/EBS_example01/config.json)
-   9. Press "Submit" button.
-   10. Device will reboot
-   11. Device should connect to your WiFi network, download, parse and save the configuration.
+   4. Chip will attempt to load parameters and connect to WiFi
+   5. If not successful - chip will create an Access Point names ESPNNN-XXXXXX
+      a. Connect your phone/PC to that Access Point. There is no password
+      b. Connect your browser to http://10.1.1.1. You have 5 minutes to do steps 7-9 below
+      c. Populate the Wifi Seetings
+      d. Populate the host/port/url to a valid JSON configuration file
+      (e.g.,: raw.githubusercontent.com, 80, /arkhipenko/EspBootstrap/master/examples/EBS_example01/config.json)
+      e. Press "Submit" button.
+      f. Device will reboot
+   6. Device should connect to your WiFi network, download, parse and save the configuration
+   7. If successful, device will remember that at least one successful attempt to download configuration was made,
+       and going forward this set could be used offline if configuration server suddenly goes offline.
+       If configurations were never downloaded successfully ata least once, then the
 
 */
 
 // These two defines MUST be placed before the header files
 // to be taken into account by the library
-
 #define  EEPROM_MAX 4096
-#define CTOKEN  "EBS2"
+#define CTOKEN  "EBS3b"
+
+// ====================================
+#define SSID1 "YOUR WIFI SSID HERE"
+#define PWD1  "YOUR WIFI PASSWORD HERE"
 
 #define _DEBUG_
 //#define _TEST_
@@ -38,7 +45,7 @@
 #endif
 
 
-// ==== Includes ===================================
+// ==== INCLUDES ======================
 #include <ParametersEEPROM.h>
 #include <EspBootstrapDict.h>
 #include <JsonConfigHttp.h>
@@ -62,8 +69,7 @@ Dictionary d(NPARS);
 // First line is used as a title, the rest are the field labels
 // This structure works in conjunction with dictionary. Only the first NPARS_BTS
 // fields are displayed on the form. Fields are numbered in the order they inserted.
-const int NPARS_BTS = 3;
-
+const int NPARS_BTS = 5;
 
 // ==== CODE ==============================
 
@@ -74,7 +80,9 @@ void printConfig() {
   _PP("\ttoken : "); _PL(CTOKEN);
   _PP("\tssid  : "); _PL(d["ssid"]);
   _PP("\tpasswd: "); _PL(d["pwd"]);
-  _PP("\tconfig: "); _PL(d["cfg_url"]);
+  _PP("\tcfg host: "); _PL(d["cfg_host"]);
+  _PP("\tcfg port: "); _PL(d["cfg_port"]);
+  _PP("\tcfg url: ");  _PL(d["cfg_url"]);
   _PP("\tota host: "); _PL(d["ota_host"]);
   _PP("\tota port: "); _PL(d["ota_port"]);
   _PP("\tota url : "); _PL(d["ota_url"]);
@@ -85,15 +93,15 @@ void printConfig() {
 
 // Arduino SETUP method
 void setup(void) {
-  int rc;
-  bool wifiTimeout;
+  int rc;            // Return code of the operations
+  bool wifiTimeout;  // Detect a WiFi connection timeout.
 
   // Setting up Serial console
 #ifdef _DEBUG_
   Serial.begin(115200);
   delay(500);
   {
-    _PL("EspBootStrap Dict Example"); _PL();
+    _PL("EspBootStrap Alternative Dict Example"); _PL();
 #if defined( ARDUINO_ARCH_ESP8266 )
     String id = "ESP8266-" + String(ESP.getChipId(), HEX);
 #endif
@@ -106,13 +114,26 @@ void setup(void) {
 #endif
 
 
-  //  Pre-populate the dictionary with defaults for the webform
-  //  First entry is a Web Form Title (element #0)
-  d("Title", "EspBootstrapD");
+  // =====================================================
+  // Alternative approach of bootstrapping for the case where
+  // some of the key parameters' defaults maybe known at the
+  // time of coding.
+  // The benefit of doing it this way is - the device maybe able to 
+  // connect to a default wifi network and update its parameters to 
+  // the latest set in an unattended way without a need for manual
+  // bootstrapping. 
+  
+  // STEP 1: The default wifi connection is attempted, and device will
+  // enter bootstrap mode if wifi connection could not be established
+
+  //  First entry is a Web Form "Title" (element #0)
+  d("Title", "EspBootstrap Alt");
   //  The rest will be created as fields on the form:
-  d("ssid", "<wifi ssid>");
-  d("pwd", "<wifi password>");
-  d("cfg_url", "http://raw.githubusercontent.com/arkhipenko/EspBootstrap/master/examples/EBS_example02_ParametersEEPROM/config.json");
+  d("ssid", SSID1);
+  d("pwd", PWD1);
+  d("cfg_host", "ota.home.lan");
+  d("cfg_port", "80");
+  d("cfg_url", "/esp/config/ebs03b_config.json");
 
   // **** PARAMETERS COMPONENT OF ESPBOOTSTRAP LIBRARY ****
   // ======================================================
@@ -133,41 +154,56 @@ void setup(void) {
   // load() methods attempts to load parameters from the EEPROM
   // It checks for a valid CRC and a match on the TOKENs.
   // If either CRC or token do not match, an error is set
-  // load() can return OK, indicating that in the end the structure was populated with something,
-  // however lastError() may indicate that values were overwritten with defaults due to CRC
-  // or Token mismatch, and therefore return a non-zero value. Always check lastError()!
+  // load() rc may indicate that values were overwritten with defaults due to CRC
+  // or Token mismatch, and therefore return a non-zero value. Always check return code!
   // Upon success, the dictionary should be updated with key-value pairs from the EEPROM
   rc = p.load();
   _PP("Configuration loaded. rc = "); _PL(rc);
   printConfig();
 
-  // If Parameters were loaded successfully, the device will try to
-  // connect to the WiFi network (d["ssid"], d["pwd"]) specified in the configuration.
+  // The device will try to connect to the WiFi network (d["ssid"], d["password"])
+  // specified in the configuration, which could be part of the saved parameters or defaults.
   // It will time out after 30 seconds on an assumption that WiFi config is invalid
   // 30 seconds is arbitrary - you can set it for longer of shorter period of time
 
-  if (rc == PARAMS_OK) {
-    _PP("Connecting to WiFi for 30 sec:");
-    setupWifi(d["ssid"].c_str(), d["pwd"].c_str());
-    wifiTimeout = waitForWifi(30 * BOOTSTRAP_SECOND);
+  _PP("Connecting to WiFi for 30 sec:");
+  setupWifi(d["ssid"].c_str(), d["pwd"].c_str());
+  wifiTimeout = waitForWifi(30 * BOOTSTRAP_SECOND);
+
+  // STEP 2:
+  // If connected to WiFi, device will attempt to load parameters from the configuration server
+  // This sketch uses the option with explicit host/port/url schema:
+  // NOTE: host should not have 'http://' in front, just the domain name or ip address
+  if ( !wifiTimeout ) {
+    rc = JSONConfig.parse( d["cfg_host"], d["cfg_port"].toInt(), d["cfg_url"], d);
+    // If successful, the "d" dictionary should have a refreshed set of parameters from the JSON file.
+    _PP("JSONConfig finished. rc = "); _PL(rc);
+    _PP("Current dictionary count = "); _PL(d.count());
+    _PP("Current dictionary size = "); _PL(d.size());
+
+    // If reading configration JSON file ended successfully, a special key-value pair ("saved ok")
+    // is inserted into the dictionary. This key indicated that the device was able to read configuration
+    // successfully at least once, and can use this configuration for normal operations even if
+    // subsequent configuration read is not successful for whatever reason.
+    // This allows device to continue to operate even if, for instance, the configuration server is down.
+    if (rc == JSON_OK) {
+      p.save();
+      d("saved", "ok");
+    }
   }
 
-  // If loading of parameters failed, or a WiFi connection timed out
-  // we need to BootStrap the device.
-  // ESPBootstrap is a static singleton object which will start up an Access Point (ESPXXX-NNNNNN),
-  // and a webserver, and then display a simple web form as specified by the PAGE and PARS structures.
-  // The webserver will be active for 5 minutes. This is done to prevent devices from going into
-  // bootstrap mode forever due to intermittent WiFi issues. After 5 minutes, if the Submit button
-  // was never pressed, the device will reboot and re-try to connect to current WiFi network.
-  // This will continue until either the WiFi settings are changes on the web page, or WiFi network
-  // issues with the current correct settings are resolved
-  if (rc != PARAMS_OK || wifiTimeout) {
+  // STEP 3:
+  // Now we are ready to assess what happened with our attempt to connect to WiFi,
+  // load existing parameters, and parse JSON configuration from the config server. 
+  // The device will need bootstrapping in case of:
+  //   1. WiFi timed out  -OR-
+  //   2. JSON config parsing ended up in error and a good set of parameters was never saved 
+  if ( wifiTimeout || !( rc == JSON_OK || d("saved") ) ) {
     _PL("Device needs bootstrapping:");
-
 
     // **** BOOTSTRAP COMPONENT OF ESPBOOTSTRAP LIBRARY ****
     // =====================================================
-    // ESPBootstrap.run() takes 4 paramters:
+    // ESPBootstrap.run() takes 3 paramters:
     //  Reference to the dictionary object with title and fields, {Dictionary}
     //  Number of parameters to display on the web form, {int}
     //  Timeout in milliseconds. (can use helper constants BOOTSTRAP_MINUTE and BOOTSTRAP_SECOND)
@@ -188,37 +224,15 @@ void setup(void) {
     ESP.restart();
   }
 
-  // **** JSONCONFIG COMPONENT OF ESPBOOTSTRAP LIBRARY ****
-  // ======================================================
-  // The rest of the parameters could be lifted off a JSON configuration file
-  // Example of the JSON file is provided on the github.
-  // JSON file rules:
-  //  1. No arrays - just a list of key-value pairs
-  //  2. All keys and values are strings and should be in quotation marks
-  //  3. The order of key-value pairs in the file does not matter
-  //  4. Keys and values can contain backslash-ed characters: e.g.; "key\"with a quote" : "\\path\\path2",
-  //  5. Each line should end with a comma "," (except the last line)
-  //
-  // JSONConfig is a static singleton object that does HTTP call, parses the JSON file, and
-  // populates respective configuration key-value pairs.
-  // JSONConfig.parseHttp takes 3 parameters:
-  //  a fully quallified URL pointing to a JSON configuation file (including http://) {char *}
-  //  a reference to the parameter dictionary object, {Dictionary}
-  // key-value pairs are ADDED or UPDATED in the dictionary, therefore JSON file may contain a subset of
-  // parameters (e.g., the WiFi settings are always set by the Bootstrap web form, and the rest is
-  // provided by the JSON file.
-  rc = JSONConfig.parse(d["cfg_url"], d);
-
-  // If successful, the "d" dictionary should have a refreshed set of parameters from the JSON file.
-  _PP("JSONConfig finished. rc = "); _PL(rc);
+  // If you got this far you should have configuration loaded and ready to go.
   _PP("Current dictionary count = "); _PL(d.count());
   _PP("Current dictionary size = "); _PL(d.size());
   printConfig();
-  if (rc == 0) p.save();
+
+  // Continue with other setup() activities
 }
 
 void loop(void) {
-
 }
 
 // This method prepares for WiFi connection

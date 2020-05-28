@@ -11,12 +11,25 @@
    https://github.com/me-no-dev/arduino-esp32fs-plugin.git
 
 */
+// Prameters token
+#define CTOKEN  "EBS5"
 
-//#define _DICT_CRC64_
+// Enable short debug printouts
+#define _DEBUG_
+//#define _TEST_
+
+#ifdef _DEBUG_
+#define _PP(a) Serial.print(a);
+#define _PL(a) Serial.println(a);
+#else
+#define _PP(a)
+#define _PL(a)
+#endif
+
+
+// ==== Includes ===================================
 #include <ParametersSPIFFS.h>
 #include <EspBootstrapDict.h>
-
-
 // Includes for running the webserver
 // SPIFFS browsing example.
 #if defined( ARDUINO_ARCH_ESP8266 )
@@ -44,22 +57,6 @@
 FS* filesystem = &SPIFFS;
 WebServer server(80);
 File fsUploadFile;
-
-// Prameters token
-#define CTOKEN  "EBS5"
-
-// Enable short debug printouts
-#define _DEBUG_
-//#define _TEST_
-
-#ifdef _DEBUG_
-#define _PP(a) Serial.print(a);
-#define _PL(a) Serial.println(a);
-#else
-#define _PP(a)
-#define _PL(a)
-#endif
-
 
 const String TOKEN(CTOKEN);
 

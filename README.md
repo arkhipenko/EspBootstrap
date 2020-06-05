@@ -249,4 +249,4 @@ For instance: `404` - page not found.
 
 ------
 
-###### EspBootstrap v1  is deprecated, but still included in the library for backwards compatibility.
+###### EspBootstrap v1 is deprecated, and no longer included in the library.

@@ -82,16 +82,16 @@ EspBootstrapBase::~EspBootstrapBase () {
 }
 
 #if defined( ARDUINO_ARCH_ESP8266 )
-#define   SSID_PREFIX   "ESP8266-"
+#define   SSID_PREFIX   "esp8266-"
 #endif
 
 #if defined( ARDUINO_ARCH_ESP32 )
-#define   SSID_PREFIX   "ESP32-"
+#define   SSID_PREFIX   "esp32-"
 #endif
 
 
 #ifndef SSID_PREFIX
-#define   SSID_PREFIX   "BOOTSTRAP-AP"
+#define   SSID_PREFIX   "bootstrap-ap"
 #endif
 
 

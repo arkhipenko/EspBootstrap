@@ -99,11 +99,14 @@ int8_t EspBootstrapDict::doRun() {
   WiFi.disconnect();
   WiFi.mode(WIFI_AP);
 
-#if defined( ARDUINO_ARCH_ESP8266 )
-  ssid += String(ESP.getChipId(), HEX);
-#endif
+  ssid += WiFi.macAddress();
+  ssid.replace(":", "");
+  ssid.toLowerCase();
+//#if defined( ARDUINO_ARCH_ESP8266 )
+//  ssid += String(ESP.getChipId(), HEX);
+//#endif
 #if defined( ARDUINO_ARCH_ESP32 )
-  ssid += String((uint32_t)( ESP.getEfuseMac() & 0xFFFFFFFFL ), HEX);
+//  ssid += String((uint32_t)( ESP.getEfuseMac() & 0xFFFFFFFFL ), HEX);
   WiFi.softAP( ssid.c_str());
   delay(50);
 #endif

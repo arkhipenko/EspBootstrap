@@ -163,6 +163,8 @@ int8_t ParametersEEPROM::load() {
 
 
 int8_t ParametersEEPROM::save() {
+  uint8_t changed = 0;
+  
   if (!iActive) {
     return PARAMS_ACT;
   }
@@ -222,7 +224,12 @@ int8_t ParametersEEPROM::save() {
 #if defined( ARDUINO_ARCH_AVR )
     EEPROM.update(iAddress + i, *p);
 #else
-    EEPROM.write(iAddress + i, *p);
+    // protect memory from excessive writes
+    uint8_t b = EEPROM.read(iAddress + i);
+    if ( b != *p) {
+        EEPROM.write(iAddress + i, *p);
+        changed = 1;
+    }
 #endif
   }
 
@@ -234,10 +241,17 @@ int8_t ParametersEEPROM::save() {
 #if defined( ARDUINO_ARCH_AVR )
   EEPROM.update( iAddress + iSize - 1, checksum () );
 #else
-  EEPROM.write( iAddress + iSize - 1, checksum () );
+  {
+    uint8_t b = EEPROM.read(iAddress + iSize - 1);
+    uint8_t c = checksum ();
+    if ( b != c ) { 
+        EEPROM.write( iAddress + iSize - 1, c );
+        changed = 1;
+    }
+  }
 #endif
 #if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
-  EEPROM.commit();
+  if ( changed ) EEPROM.commit();
 #endif
 
 #ifdef _LIBDEBUG_

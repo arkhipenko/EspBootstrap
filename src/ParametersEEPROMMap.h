@@ -136,7 +136,8 @@ int8_t ParametersEEPROMMap::load() {
 
 int8_t ParametersEEPROMMap::save() {
   uint8_t *ptr = (uint8_t *) iData;
-
+  uint8_t changed = 0;
+  
   if (!iActive) {
     return PARAMS_ACT;
   }
@@ -148,13 +149,26 @@ int8_t ParametersEEPROMMap::save() {
 #if defined( ARDUINO_ARCH_AVR )
     EEPROM.update(iAddress + i, *ptr);
 #else
-    EEPROM.write(iAddress + i, *ptr);
+    // protect memory from excessive writes
+    uint8_t b = EEPROM.read(iAddress + i);
+    if ( b != *ptr) {
+        EEPROM.write(iAddress + i, *ptr);
+        changed = 1;
+    }
 #endif
   }
 #if defined( ARDUINO_ARCH_AVR )
   EEPROM.update( iAddress + iLen, checksum () );
 #else
-  EEPROM.write( iAddress + iLen, checksum () );
+  {
+    uint8_t b = EEPROM.read(iAddress + iLen);
+    uint8_t c = checksum ();
+    if ( b != c ) { 
+        EEPROM.write( iAddress + iLen, c );
+        changed = 1;
+    }
+  }
+//  EEPROM.write( iAddress + iLen, checksum () );
 #endif
 #if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
   EEPROM.commit();

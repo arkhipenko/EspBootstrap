@@ -51,7 +51,7 @@ class JsonConfigBase {
     
   protected:
     virtual int8_t  _doParse(size_t aLen, uint16_t aNum);
-    virtual char    _nextChar() { return JSON_EOF; };
+    virtual int16_t _nextChar() { return JSON_EOF; };
     virtual int8_t  _storeKeyValue(const char* aKey, const char* aValue) { return JSON_MEM; };
 };
 
@@ -69,8 +69,10 @@ int8_t JsonConfigBase::_doParse(size_t aLen, uint16_t aNum) {
   String    currentValue = String();
 
   for (int i = 0; i < aLen; i++) {
-    char c = _nextChar();
-    if ( c < 0 ) break; //EOF
+    char c;
+    int16_t nrc = _nextChar();
+    if ( nrc < 0 ) break; //EOF
+    c = (char) nrc;
 #ifdef _LIBDEBUG_
     Serial.print(c);
 #endif

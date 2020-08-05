@@ -56,7 +56,7 @@ class JsonConfigSPIFFSMap : public JsonConfigBase {
     int8_t   parse(const String aUrl, char** aMap, int aNum);
     
   protected:
-    virtual char    _nextChar();
+    virtual int16_t _nextChar();
     virtual int8_t  _storeKeyValue(const char* aKey, const char* aValue);
     virtual int8_t  _doParse(size_t aLen, uint16_t aNum) { return JsonConfigBase::_doParse(aLen, aNum); };
         
@@ -95,7 +95,7 @@ int8_t JsonConfigSPIFFSMap::parse(const String aUrl, char** aMap, int aNum) {
 
 
 char    JsonConfigSPIFFSMap::_nextChar() {
-    return iF.read();
+    return (int16_t) iF.read();
 }
 
 

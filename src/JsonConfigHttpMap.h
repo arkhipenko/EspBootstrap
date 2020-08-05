@@ -58,7 +58,7 @@ class JsonConfigHttpMap : public JsonConfigBase {
     int8_t   parse(const String aHost, uint16_t aPort, String aUrl, char** aMap, int aNum);
         
   protected:
-    virtual char    _nextChar();
+    virtual int16_t _nextChar();
     virtual int8_t  _storeKeyValue(const char* aKey, const char* aValue);
     virtual int8_t  _doParse(size_t aLen, uint16_t aNum) { return JsonConfigBase::_doParse(aLen, aNum); };
     
@@ -146,9 +146,9 @@ int8_t JsonConfigHttpMap::parseCommon(int aHttpResult, int aNum) {
 }
 
 
-char    JsonConfigHttpMap::_nextChar() {
+int16_t JsonConfigHttpMap::_nextChar() {
     if (iIndex < iPayload.length() ) {
-        return iPayload[iIndex++];
+        return (int16_t) iPayload[iIndex++];
     }
     else {
         return JSON_EOF;

@@ -55,7 +55,7 @@ class JsonConfigSPIFFS : public JsonConfigBase {
     int8_t   parse(const String aUrl, Dictionary& aDict, int aNum = 0);
 
   protected:
-    virtual char    _nextChar();
+    virtual int16_t _nextChar();
     virtual int8_t  _storeKeyValue(const char* aKey, const char* aValue);
     virtual int8_t  _doParse(size_t aLen, uint16_t aNum) { return JsonConfigBase::_doParse(aLen, aNum); };
     
@@ -96,8 +96,8 @@ int8_t JsonConfigSPIFFS::parse(const String aUrl, Dictionary& aDict, int aNum) {
 }
 
 
-char    JsonConfigSPIFFS::_nextChar() {
-    return iF.read();
+int16_t    JsonConfigSPIFFS::_nextChar() {
+    return (int16_t) iF.read();
 }
 
 

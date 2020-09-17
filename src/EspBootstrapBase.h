@@ -50,6 +50,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #define BOOTSTRAP_OK        0
 #define BOOTSTRAP_ERR      (-1)
+#define BOOTSTRAP_CANCEL  (-98)
 #define BOOTSTRAP_TIMEOUT (-99)
 
 #define BOOTSTRAP_SECOND  1000L
@@ -81,6 +82,8 @@ EspBootstrapBase::~EspBootstrapBase () {
   }
 }
 
+#ifndef   SSID_PREFIX
+
 #if defined( ARDUINO_ARCH_ESP8266 )
 #define   SSID_PREFIX   "esp8266-"
 #endif
@@ -89,10 +92,10 @@ EspBootstrapBase::~EspBootstrapBase () {
 #define   SSID_PREFIX   "esp32-"
 #endif
 
-
 #ifndef SSID_PREFIX
 #define   SSID_PREFIX   "bootstrap-ap"
 #endif
 
+#endif
 
 #endif // _ESPBOOTSTRAPBASE_H_

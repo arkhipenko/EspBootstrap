@@ -44,11 +44,13 @@ class EspBootstrapDict : public EspBootstrapBase {
     int8_t    run(Dictionary &aDict, uint8_t aNum = 0, uint32_t aTimeout = 10 * BOOTSTRAP_MINUTE);
     void      handleRoot ();
     void      handleSubmit ();
-
+    inline void cancel() { iCancelAP = true; } ;
+    
 
   private:
     int8_t            doRun();
 
+    bool              iCancelAP;
     Dictionary*       iDict;
 
 };
@@ -86,6 +88,7 @@ int8_t EspBootstrapDict::run(Dictionary &aDict, uint8_t aNum, uint32_t aTimeout)
   iDict = &aDict;
   iTimeout = aTimeout;
 
+  iCancelAP = false;
   return doRun();
 }
 
@@ -126,16 +129,24 @@ int8_t EspBootstrapDict::doRun() {
   iServer->begin();
 
   uint32_t timeNow = millis();
-  while (!iAllDone) {
+  while (!iAllDone && !iCancelAP) {
     iServer->handleClient();
-    if ( millis() - timeNow > iTimeout ) return BOOTSTRAP_TIMEOUT;
+    if ( millis() - timeNow > iTimeout ) {
+        iServer->stop();
+        iServer->close();
+        delete iServer;
+        iServer = NULL;
+        return BOOTSTRAP_TIMEOUT;
+    }
+    delay(10);
+//    yield();
   }
 
   iServer->stop();
   iServer->close();
   delete iServer;
   iServer = NULL;
-  return BOOTSTRAP_OK;
+  return (iCancelAP ? BOOTSTRAP_CANCEL: BOOTSTRAP_OK);
 }
 
 

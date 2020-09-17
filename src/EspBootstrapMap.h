@@ -44,17 +44,20 @@ class EspBootstrapMap : public EspBootstrapBase {
     int8_t    run(const char** aTitles, char** aMap, uint8_t aNum, uint32_t aTimeout = 10 * BOOTSTRAP_MINUTE);
     void      handleRoot ();
     void      handleSubmit ();
+    inline void cancel() { iCancelAP = true; } ;
 
 
   private:
     int8_t            doRun();
 
+    bool              iCancelAP;
     const char**      iTitles;
     char**            iMap;
 };
 
 
 EspBootstrapMap::EspBootstrapMap () {
+    iCancelAP = false;
 }
 
 
@@ -79,6 +82,7 @@ int8_t EspBootstrapMap::run(const char** aTitles, char** aMap, uint8_t aNum, uin
   iTitles = aTitles;
   iMap = aMap;
   iTimeout = aTimeout;
+  iCancelAP = false;
 
   return doRun();
 }
@@ -120,16 +124,24 @@ int8_t EspBootstrapMap::doRun() {
   iServer->begin();
 
   uint32_t timeNow = millis();
-  while (!iAllDone) {
+  while (!iAllDone && !iCancelAP) {
     iServer->handleClient();
-    if ( millis() - timeNow > iTimeout ) return BOOTSTRAP_TIMEOUT;
+    if ( millis() - timeNow > iTimeout ) {
+        iServer->stop();
+        iServer->close();
+        delete iServer;
+        iServer = NULL;
+        return BOOTSTRAP_TIMEOUT;
+    }
+    delay(10);
+//    yield();
   }
 
   iServer->stop();
   iServer->close();
   delete iServer;
   iServer = NULL;
-  return BOOTSTRAP_OK;
+  return (iCancelAP ? BOOTSTRAP_CANCEL: BOOTSTRAP_OK);
 }
 
 

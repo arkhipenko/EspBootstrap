@@ -92,7 +92,7 @@ int8_t ParametersEEPROM::begin() {
   uint16_t maxLen = iToken.length() + iDict.esize() + 4; // 4: 1 null for token, 1 crc8, 2 bytes for count
   if ( iSize < EEPROM_MAX && maxLen <= iSize) {
 #if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
-    EEPROM.begin(iSize);
+    EEPROM.begin(4096); // allocate all memory
 #endif
     iActive = true;
     return PARAMS_OK;
@@ -164,6 +164,7 @@ int8_t ParametersEEPROM::load() {
 
 int8_t ParametersEEPROM::save() {
   uint8_t changed = 0;
+  int8_t  rc = PARAMS_OK;
   
   if (!iActive) {
     return PARAMS_ACT;
@@ -251,7 +252,9 @@ int8_t ParametersEEPROM::save() {
   }
 #endif
 #if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
-  if ( changed ) EEPROM.commit();
+  if ( changed ) {
+    if ( !EEPROM.commit() ) rc = PARAMS_ERR; 
+  }
 #endif
 
 #ifdef _LIBDEBUG_
@@ -266,7 +269,7 @@ int8_t ParametersEEPROM::save() {
   Serial.println ("Parameters save: memory freed");
 #endif
 
-  return PARAMS_OK;
+  return rc;
 
 }
 

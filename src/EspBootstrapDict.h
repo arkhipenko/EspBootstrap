@@ -163,7 +163,14 @@ void EspBootstrapDict::handleRoot() {
   iServer->sendContent(buf);
 
   for (int i = 1; i <= iNum; i++) {
-    snprintf(buf, BUFLEN, "<label for=\"par%02d\"><b>%s:</b></label><br><input type=\"text\" id=\"par%02d\" name=\"par%02d\" value=\"%s\"><br>", i, d(i).c_str(), i, i, d[i].c_str() );
+    String s = d(i);
+    s.toUpperCase();
+    if ( s.indexOf("PASSWORD") >= 0 || s.indexOf("PWD") >= 0 ) {
+      snprintf(buf, BUFLEN, "<label for=\"par%02d\"><b>%s:</b></label><br><input type=\"password\" id=\"par%02d\" name=\"par%02d\" value=\"%s\"><br>", i, d(i).c_str(), i, i, d[i].c_str() );
+    }
+    else {
+      snprintf(buf, BUFLEN, "<label for=\"par%02d\"><b>%s:</b></label><br><input type=\"text\" id=\"par%02d\" name=\"par%02d\" value=\"%s\"><br>", i, d(i).c_str(), i, i, d[i].c_str() );
+    }
     iServer->sendContent(buf);
   }
   iServer->sendContent("<br><input type=\"submit\" value=\"Submit\"></form></body></html>");

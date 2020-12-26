@@ -97,16 +97,17 @@ int8_t ParametersSPIFFS::save() {
     return PARAMS_FER;
   }
 
-  int l = iDict.count();
-  f.print('{');
-  for (int i = 0; i < l; i++) {
-    f.print('\"');
-    f.print(iDict(i));
-    f.print("\":\"");
-    f.print(iDict[i]);
-    if ( i < l - 1 ) f.print("\", ");
-  }
-  f.print("\"}");
+  f.print(iDict.json());
+//  int l = iDict.count();
+//  f.print('{');
+//  for (int i = 0; i < l; i++) {
+//    f.print('\"');
+//    f.print(iDict(i));
+//    f.print("\":\"");
+//    f.print(iDict[i]);
+//    if ( i < l - 1 ) f.print("\", ");
+//  }
+//  f.print("\"}");
   f.close();
 
   return PARAMS_OK;

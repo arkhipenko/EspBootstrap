@@ -1,0 +1,9 @@
+# Comments are supported although they are not allowed by JSON standard
+{
+  "ssid"       : "your wifi ssid",    	# WiFi credentials
+  "pwd"        : "your wifi password",  # WiFi credentials
+  "cfg_url"    : "http://raw.githubusercontent.com/arkhipenko/EspBootstrap/master/examples/EBS_example02_ParametersEEPROM/config.json",
+  "ota_host"   : "ota.home.lan",
+  "ota_port"   : "80",
+  "ota_url"    : "/esp/esp8266.php"
+}

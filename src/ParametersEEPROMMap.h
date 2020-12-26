@@ -98,7 +98,7 @@ int8_t ParametersEEPROMMap::begin() {
   if ( iMaxLen < 4 ) iMaxLen = 4;
   if ( iMaxLen <= EEPROM_MAX ) {
 #if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
-    EEPROM.begin(iLen + 1);
+    EEPROM.begin(4096);
 #endif
     iActive = true;
     return PARAMS_OK;
@@ -137,6 +137,7 @@ int8_t ParametersEEPROMMap::load() {
 int8_t ParametersEEPROMMap::save() {
   uint8_t *ptr = (uint8_t *) iData;
   uint8_t changed = 0;
+  int8_t  rc = PARAMS_OK;
   
   if (!iActive) {
     return PARAMS_ACT;
@@ -171,10 +172,12 @@ int8_t ParametersEEPROMMap::save() {
 //  EEPROM.write( iAddress + iLen, checksum () );
 #endif
 #if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
-  EEPROM.commit();
-#endif
+  if ( changed ) {
+    if ( !EEPROM.commit() ) rc = PARAMS_ERR;
+  }
+#endif  
 
-  return PARAMS_OK;
+  return rc;
 }
 
 

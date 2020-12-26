@@ -49,11 +49,19 @@ Dictionary approach is the default.
 #### Typical device boot process
 
 1. Attempt to load parameters from EEPROM or file (fails first time since nothing was ever saved)
+
 2. Collect initial configuration parameters via web form (http://10.1.1.1) created by **ESPBootstrap** (typically a WiFi SSID, password and a link to web-based configuration service)
+
+   **NOTE**: fields with key containing words "password" or "pwd" will have characters masked with a `*` symbol.
+
 3. Reboot and connect to WiFi with the recently obtained credentials
+
 4. Load JSON configuration file from the web service or filesystem using **JSONConfig** and populate respective configuration parameters into the provided dictionary object
+
 5. Save new configuration to EEPROM or file
+
 6. Check for OTA update, download, install and reboot if update is available
+
 7. Resume normal operation, periodically checking for OTA updates and config changes.
 
 
@@ -213,10 +221,12 @@ If additional storage or update types are required, they could be implemented la
 ```
 #define JSON_OK         0
 #define JSON_ERR      (-1)
-#define JSON_COMMA    (-2)
-#define JSON_COLON    (-3)
-#define JSON_QUOTE    (-4)
-#define JSON_BCKSL    (-5)
+#define JSON_COMMA    (-20)
+#define JSON_COLON    (-21)
+#define JSON_QUOTE    (-22)
+#define JSON_BCKSL    (-23)
+#define JSON_MEM      (-24)
+#define JSON_FMT      (-25)
 #define JSON_HTTPERR  (-97)
 #define JSON_NOWIFI   (-98)
 #define JSON_EOF      (-99)
@@ -235,6 +245,10 @@ If additional storage or update types are required, they could be implemented la
 `JSON_QUOTE`   - missing closing quotation mark
 
 `JSON_BCKSL`    - orphaned back-slash. Back-slash not followed by a "verbatim" character. 
+
+`JSON_MEM` 	- error allocating memory for dictionary entry
+
+`JSON_FMT`	- incorrect JSON formatting (invalid character)
 
 `JSON_HTTPERR`  - general HTTP error. Cannot initiate a connection to provided URL. 
 

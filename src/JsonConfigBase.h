@@ -42,6 +42,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define JSON_QUOTE    (-22)
 #define JSON_BCKSL    (-23)
 #define JSON_MEM      (-24)
+#define JSON_FMT      (-25)
 #define JSON_EOF      (-99)
 
 class JsonConfigBase {
@@ -63,6 +64,7 @@ int8_t JsonConfigBase::_doParse(size_t aLen, uint16_t aNum) {
   bool      insideQoute = false;
   bool      nextVerbatim = false;
   bool      isValue = false;
+  bool      isComment = false;
   int       p = 0;
   int8_t    rc;
   String    currentKey = String();
@@ -74,8 +76,15 @@ int8_t JsonConfigBase::_doParse(size_t aLen, uint16_t aNum) {
     if ( nrc < 0 ) break; //EOF
     c = (char) nrc;
 #ifdef _LIBDEBUG_
-    Serial.print(c);
+Serial.print(c); Serial.print("("); Serial.print((int)c); Serial.print(")");
 #endif
+    if ( isComment ) {
+      if ( c == '\n' ) {
+        isComment = false;
+        isValue = false;
+      }
+      continue;
+    }
     if (nextVerbatim) {
       nextVerbatim = false;
     }
@@ -85,7 +94,13 @@ int8_t JsonConfigBase::_doParse(size_t aLen, uint16_t aNum) {
         nextVerbatim = true;
         continue;
       }
-      if (c == '\"') {
+      if ( c == '#' ) {
+        if ( !insideQoute ) {
+          isComment = true;
+          continue;
+        }
+      }
+      if ( c == '\"' ) {
         if (!insideQoute) {
           insideQoute = true;
           continue;
@@ -100,6 +115,7 @@ int8_t JsonConfigBase::_doParse(size_t aLen, uint16_t aNum) {
             p++;
             if (aNum > 0 && p >= aNum) break;
           }
+          continue;
         }
       }
       if (c == '\n') {
@@ -109,6 +125,8 @@ int8_t JsonConfigBase::_doParse(size_t aLen, uint16_t aNum) {
         if ( nextVerbatim ) {
           return JSON_BCKSL;
         }
+        isValue = false;  // missing comma, but let's forgive that
+        continue;
       }
       if (!insideQoute) {
         if (c == ':') {
@@ -125,6 +143,8 @@ int8_t JsonConfigBase::_doParse(size_t aLen, uint16_t aNum) {
           isValue = false;
           continue;
         }
+        if ( c == '{' || c == '}' || c == ' ' || c == '\t' ) continue;
+        return JSON_FMT;
       }
     }
     if (insideQoute) {

@@ -102,7 +102,7 @@ int8_t JsonConfigHttp::parse(const String aUrl, Dictionary& aDict, int aNum) {
     
     if (WiFi.status() != WL_CONNECTED) return JSON_NOWIFI;
 #ifdef _LIBDEBUG_
-    Serial.printf("JsonConfig: Connecting to: %s\n", aUrl.c_str());
+    Serial.printf("JsonConfig parse: Connecting to: %s\n", aUrl.c_str());
 #endif
     iDict = &aDict;
     rc = parseCommon( iHttp.begin(client, aUrl), aNum );
@@ -117,6 +117,9 @@ int8_t  JsonConfigHttp::parseCommon(int aHttpResult, int aNum) {
     if ( aHttpResult ) {
         int httpCode = iHttp.GET();
             // httpCode will be negative on error
+#ifdef _LIBDEBUG_
+    Serial.printf("JsonConfig parseCommon: httpCode = %d\n", httpCode);
+#endif
         if (httpCode > 0) {
             if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
                 iPayload = iHttp.getString();

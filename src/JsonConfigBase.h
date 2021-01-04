@@ -143,7 +143,7 @@ Serial.print(c); Serial.print("("); Serial.print((int)c); Serial.print(")");
           isValue = false;
           continue;
         }
-        if ( c == '{' || c == '}' || c == ' ' || c == '\t' ) continue;
+        if ( c == '{' || c == '}' || c == ' ' || c == '\t' || c == '\r' ) continue;
         return JSON_FMT;
       }
     }

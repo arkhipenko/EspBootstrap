@@ -12,7 +12,7 @@
     "type": "git",
     "url": "https://github.com/arkhipenko/EspBootstrap.git"
   },
-  "version": "2.3.0",
+  "version": "2.3.1",
   "frameworks": "arduino",
   "platforms": ["espressif8266", "espressif32"]
 }

@@ -37,14 +37,16 @@
 
 #ifndef EEPROM_MAX
 
-#define EEPROM_MAX  256 // safe default
-
 #if defined( ARDUINO_ARCH_AVR )
 #define EEPROM_MAX  512
 #endif
 
 #if defined( ARDUINO_ARCH_ESP8266 ) || defined( ARDUINO_ARCH_ESP32 )
 #define EEPROM_MAX  4096
+#endif
+
+#ifndef EEPROM_MAX
+#define EEPROM_MAX  256 // safe default
 #endif
 
 #endif // #ifndef EEPROM_MAX

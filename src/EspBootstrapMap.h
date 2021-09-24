@@ -41,7 +41,7 @@ class EspBootstrapMap : public EspBootstrapBase {
     EspBootstrapMap();
     virtual ~EspBootstrapMap();
 
-    int8_t    run(const char** aTitles, char** aMap, uint8_t aNum, uint32_t aTimeout = 10 * BOOTSTRAP_MINUTE);
+    int8_t    run(const char** aTitles, char** aMap, uint8_t aNum, uint32_t aTimeout = 10 * BOOTSTRAP_MINUTE, bool aSecPass = true);
     void      handleRoot ();
     void      handleSubmit ();
     inline void cancel() { iCancelAP = true; } ;
@@ -51,6 +51,7 @@ class EspBootstrapMap : public EspBootstrapBase {
     int8_t            doRun();
 
     bool              iCancelAP;
+    bool              iSecurePassword;
     const char**      iTitles;
     char**            iMap;
 };
@@ -76,14 +77,15 @@ void __espbootstrap_handlesubmit() {
 }
 
 
-int8_t EspBootstrapMap::run(const char** aTitles, char** aMap, uint8_t aNum, uint32_t aTimeout) {
+int8_t EspBootstrapMap::run(const char** aTitles, char** aMap, uint8_t aNum, uint32_t aTimeout, bool aSecPass) {
 
   iNum = aNum;
   iTitles = aTitles;
   iMap = aMap;
   iTimeout = aTimeout;
   iCancelAP = false;
-
+  iSecurePassword = aSecPass;
+  
   return doRun();
 }
 
@@ -157,7 +159,12 @@ void EspBootstrapMap::handleRoot() {
   iServer->sendContent(buf);
 
   for (int i = 1; i <= iNum; i++) {
-    snprintf(buf, BUFLEN, "<label for=\"par%02d\"><b>%s:</b></label><br><input type=\"text\" id=\"par%02d\" name=\"par%02d\" value=\"%s\"><br>", i, iTitles[i], i, i, iMap[i - 1] );
+    if ( iSecurePassword && false ) { //  fr future use
+      snprintf(buf, BUFLEN, "<label for=\"par%02d\"><b>%s:</b></label><br><input type=\"password\" id=\"par%02d\" name=\"par%02d\" value=\"%s\"><br>", i, iTitles[i], i, i, iMap[i - 1] );
+    }
+    else {
+      snprintf(buf, BUFLEN, "<label for=\"par%02d\"><b>%s:</b></label><br><input type=\"text\" id=\"par%02d\" name=\"par%02d\" value=\"%s\"><br>", i, iTitles[i], i, i, iMap[i - 1] );
+    }
     iServer->sendContent(buf);
   }
   iServer->sendContent("<br><input type=\"submit\" value=\"Submit\"></form></body></html>");

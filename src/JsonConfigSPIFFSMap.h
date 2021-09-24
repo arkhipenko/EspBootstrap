@@ -56,9 +56,8 @@ class JsonConfigSPIFFSMap : public JsonConfigBase {
     int8_t   parse(const String aUrl, char** aMap, int aNum);
     
   protected:
-    virtual int16_t _nextChar();
     virtual int8_t  _storeKeyValue(const char* aKey, const char* aValue);
-    virtual int8_t  _doParse(size_t aLen, uint16_t aNum) { return JsonConfigBase::_doParse(aLen, aNum); };
+    virtual int8_t  _doParse(Stream& aJson, uint16_t aNum) { return JsonConfigBase::_doParse(aJson, aNum); };
         
   private:
     char**          iMap;
@@ -87,16 +86,16 @@ int8_t JsonConfigSPIFFSMap::parse(const String aUrl, char** aMap, int aNum) {
 
   iMap = aMap;
   iParamIndex = 0;
-  rc = _doParse ( iF.size(), aNum );
+  rc = _doParse ( iF, aNum );
   
   iF.close();
   return rc;
 }
 
 
-char    JsonConfigSPIFFSMap::_nextChar() {
-    return (int16_t) iF.read();
-}
+// char    JsonConfigSPIFFSMap::_nextChar() {
+    // return (int16_t) iF.read();
+// }
 
 
 int8_t  JsonConfigSPIFFSMap::_storeKeyValue(const char* aKey, const char* aValue){

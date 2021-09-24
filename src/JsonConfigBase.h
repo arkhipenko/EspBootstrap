@@ -34,7 +34,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <Arduino.h>
 
-
 #define JSON_OK         0
 #define JSON_ERR      (-1)
 #define JSON_COMMA    (-20)
@@ -51,15 +50,127 @@ class JsonConfigBase {
     virtual ~JsonConfigBase();
     
   protected:
-    virtual int8_t  _doParse(size_t aLen, uint16_t aNum);
-    virtual int16_t _nextChar() { return JSON_EOF; };
+    virtual int8_t  _doParse(Stream& aJson, uint16_t aNum);
     virtual int8_t  _storeKeyValue(const char* aKey, const char* aValue) { return JSON_MEM; };
 };
 
 JsonConfigBase::JsonConfigBase() {}
 JsonConfigBase::~JsonConfigBase() {}
 
-int8_t JsonConfigBase::_doParse(size_t aLen, uint16_t aNum) {
+int8_t JsonConfigBase::_doParse(Stream& aJson, uint16_t aNum) {
+    bool insideQoute = false;
+    bool nextVerbatim = false;
+    bool isValue = false;
+    bool isComment = false;
+    int p = 0;
+    int8_t rc;
+    String currentKey;
+    String currentValue;
+
+    while ( aJson.peek() >= 0 ) {
+        char c = aJson.read();
+        
+//#ifdef _LIBDEBUG_
+//Serial.print((uint8_t)c);
+//Serial.print(" (");
+//Serial.print(c);
+//Serial.println(")");
+//#endif
+
+        if ( isComment ) {
+          if ( c == '\n' ) {
+            isComment = false;
+            isValue = false;
+          }
+          continue;
+        }
+        if (nextVerbatim) {
+          nextVerbatim = false;
+        }
+        
+        //  not a comment and not a verbatim char
+        else {
+          // process all special cases: '\', '"', ':', and ','
+          if (c == '\\' ) {
+            nextVerbatim = true;
+            continue;
+          }
+
+          if ( c == '\"' ) {
+            if (!insideQoute) {
+              if ( isValue ) {
+                if ( currentValue.length() > 0 ) return JSON_FMT;
+              }
+              else {
+                if ( currentKey.length() > 0 ) return JSON_FMT;
+              }
+              insideQoute = true;
+              continue;
+            }
+            else {
+              insideQoute = false;
+              continue;
+            }
+          }
+          
+          if (c == '\n') {
+            if ( insideQoute ) {
+              return JSON_QUOTE;
+            }
+            if ( nextVerbatim ) {
+              return JSON_BCKSL;
+            }
+          }
+          
+#ifdef _JSON_ASCII_ONLY
+          if ( c > 127 ) continue;  //  ignore non-ascii characters
+#endif
+          
+          if (!insideQoute) {
+            if ( c == '#' ) {
+              isComment = true;
+              continue;
+            }
+
+            if (c == ':') {
+              if ( isValue ) {
+                return JSON_COMMA; //missing comma probably
+              }
+              isValue = true;
+              continue;
+            }
+
+            if ( c == '{' || c == ' ' || c == '\t'  || c == '\r' ) continue;
+            
+            if ( c == ',' || c == '\n' || c == '}') {
+              if ( isValue ) {
+                if ( currentValue.length() == 0 ) return JSON_FMT;
+                isValue = false;
+                rc = _storeKeyValue( currentKey.c_str(), currentValue.c_str() );
+                if (rc) return JSON_MEM;  // if error - exit with an error code
+                currentValue = String();
+                currentKey = String();
+                p++;
+                if (aNum > 0 && p >= aNum) break;
+              }
+              else {
+                if ( c == ',' ) return JSON_FMT;
+              }
+              continue;
+            }
+          }
+        }
+        if (isValue) currentValue.concat(c);
+        else currentKey.concat(c);
+      }
+      if (insideQoute || nextVerbatim || (aNum > 0 && p < aNum )) return JSON_EOF;
+    #ifdef _LIBDEBUG_
+        Serial.printf("Dictionary::jload: DICTIONARY_OK\n");
+    #endif
+      return JSON_OK;
+}
+
+/* int8_t JsonConfigBase::_doParse(size_t aLen, uint16_t aNum) {
 
   bool      insideQoute = false;
   bool      nextVerbatim = false;
@@ -143,7 +254,11 @@ Serial.print(c); Serial.print("("); Serial.print((int)c); Serial.print(")");
           isValue = false;
           continue;
         }
-        if ( c == '{' || c == '}' || c == ' ' || c == '\t' || c == '\r' ) continue;
+        if ( c == '{' || c == ' ' || c == '\t' || c == '\n' || c == '\r' ) continue;
+#ifdef _JSON_ASCII_ONLY
+        if ( c > 127 ) continue;  //  ignore non-ascii characters
+#endif
+        if ( c == '}' ) break;
         return JSON_FMT;
       }
     }
@@ -157,7 +272,7 @@ Serial.print(c); Serial.print("("); Serial.print((int)c); Serial.print(")");
     Serial.printf("JsonConfigBase::_doParse: JSON_OK\n");
 #endif
   return JSON_OK;
-}
+} */
 
 
 

@@ -58,17 +58,16 @@ class JsonConfigHttpMap : public JsonConfigBase {
     int8_t   parse(const String aHost, uint16_t aPort, String aUrl, char** aMap, int aNum);
         
   protected:
-    virtual int16_t _nextChar();
     virtual int8_t  _storeKeyValue(const char* aKey, const char* aValue);
-    virtual int8_t  _doParse(size_t aLen, uint16_t aNum) { return JsonConfigBase::_doParse(aLen, aNum); };
+    virtual int8_t  _doParse(Stream& aJson, uint16_t aNum) { return JsonConfigBase::_doParse(aJson, aNum); };
     
   private:
     int8_t          parseCommon(int aHttpResult, int aNum);
 
     char**          iMap;
     HTTPClient      iHttp;
-    String          iPayload;
-    size_t          iIndex;
+    // String          iPayload;
+    // size_t          iIndex;
     size_t          iParamIndex;
 };
 
@@ -124,10 +123,10 @@ int8_t JsonConfigHttpMap::parseCommon(int aHttpResult, int aNum) {
 #endif
         if (httpCode > 0) {
             if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-                iPayload = iHttp.getString();
-                iIndex = 0;
+                // iPayload = iHttp.getString();
+                // iIndex = 0;
                 iParamIndex = 0;
-                rc = _doParse(iPayload.length(), aNum);
+                rc = _doParse(iHttp.getStream(), aNum);
 #ifdef _LIBDEBUG_
             Serial.printf("JsonConfigHttpMap::parseCommon rc %d\n", rc );
 #endif                
@@ -145,7 +144,7 @@ int8_t JsonConfigHttpMap::parseCommon(int aHttpResult, int aNum) {
     return JSON_ERR;  // should never get here anyway - but stupid compiler complains. 
 }
 
-
+/* 
 int16_t JsonConfigHttpMap::_nextChar() {
     if (iIndex < iPayload.length() ) {
         return (int16_t) iPayload[iIndex++];
@@ -154,7 +153,7 @@ int16_t JsonConfigHttpMap::_nextChar() {
         return JSON_EOF;
     }
 }
-
+ */
 
 int8_t  JsonConfigHttpMap::_storeKeyValue(const char* aKey, const char* aValue){
 #ifdef _LIBDEBUG_

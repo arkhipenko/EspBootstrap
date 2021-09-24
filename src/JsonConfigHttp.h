@@ -59,9 +59,8 @@ public:
     int8_t   parse(const String aHost, uint16_t aPort, String aUrl, Dictionary& aDict, int aNum = 0);
         
     protected:
-    virtual int16_t _nextChar();
     virtual int8_t  _storeKeyValue(const char* aKey, const char* aValue);
-    virtual int8_t  _doParse(size_t aLen, uint16_t aNum) { return JsonConfigBase::_doParse(aLen, aNum); };
+    virtual int8_t  _doParse(Stream& aJson, uint16_t aNum) { return JsonConfigBase::_doParse(aJson, aNum); };
         
   private:
     int8_t          parseCommon(int aHttpResult, int aNum);
@@ -69,8 +68,8 @@ public:
     Dictionary*     iDict;
     WiFiClient      iClient;
     HTTPClient      iHttp;
-    String          iPayload;
-    size_t          iIndex;
+//    String          iPayload;
+//   size_t          iIndex;
 };
 
 #ifndef _JSONCONFIG_NOSTATIC
@@ -122,9 +121,9 @@ int8_t  JsonConfigHttp::parseCommon(int aHttpResult, int aNum) {
 #endif
         if (httpCode > 0) {
             if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-                iPayload = iHttp.getString();
-                iIndex = 0;
-                rc = _doParse(iPayload.length(), aNum);
+//                iPayload = iHttp.getString();
+//                iIndex = 0;
+                rc = _doParse(iHttp.getStream(), aNum);
                 return rc;
             }
         }
@@ -140,14 +139,14 @@ int8_t  JsonConfigHttp::parseCommon(int aHttpResult, int aNum) {
 }
 
 
-int16_t JsonConfigHttp::_nextChar() {
+/* int16_t JsonConfigHttp::_nextChar() {
     if (iIndex < iPayload.length() ) {
         return (int16_t) iPayload[iIndex++];
     }
     else {
         return JSON_EOF;
     }
-}
+} */
 
 
 int8_t  JsonConfigHttp::_storeKeyValue(const char* aKey, const char* aValue){

@@ -41,7 +41,7 @@ class EspBootstrapDict : public EspBootstrapBase {
     EspBootstrapDict();
     virtual ~EspBootstrapDict();
 
-    int8_t    run(Dictionary &aDict, uint8_t aNum = 0, uint32_t aTimeout = 10 * BOOTSTRAP_MINUTE);
+    int8_t    run(Dictionary &aDict, uint8_t aNum = 0, uint32_t aTimeout = 10 * BOOTSTRAP_MINUTE, bool aSecPass = true);
     void      handleRoot ();
     void      handleSubmit ();
     inline void cancel() { iCancelAP = true; } ;
@@ -51,6 +51,7 @@ class EspBootstrapDict : public EspBootstrapBase {
     int8_t            doRun();
 
     bool              iCancelAP;
+    bool              iSecurePassword;
     Dictionary*       iDict;
 
 };
@@ -75,7 +76,7 @@ void __espbootstrap_handlesubmit() {
 }
 
 
-int8_t EspBootstrapDict::run(Dictionary &aDict, uint8_t aNum, uint32_t aTimeout) {
+int8_t EspBootstrapDict::run(Dictionary &aDict, uint8_t aNum, uint32_t aTimeout, bool aSecPass) {
   if (aNum == 0) {
     iNum = aDict.count() - 1;
   }
@@ -87,6 +88,7 @@ int8_t EspBootstrapDict::run(Dictionary &aDict, uint8_t aNum, uint32_t aTimeout)
 
   iDict = &aDict;
   iTimeout = aTimeout;
+  iSecurePassword = aSecPass;
 
   iCancelAP = false;
   return doRun();
@@ -165,7 +167,7 @@ void EspBootstrapDict::handleRoot() {
   for (int i = 1; i <= iNum; i++) {
     String s = d(i);
     s.toUpperCase();
-    if ( s.indexOf("PASSWORD") >= 0 || s.indexOf("PWD") >= 0 ) {
+    if ( iSecurePassword && (s.indexOf("PASSWORD") >= 0 || s.indexOf("PWD") >= 0) ) {
       snprintf(buf, BUFLEN, "<label for=\"par%02d\"><b>%s:</b></label><br><input type=\"password\" id=\"par%02d\" name=\"par%02d\" value=\"%s\"><br>", i, d(i).c_str(), i, i, d[i].c_str() );
     }
     else {
